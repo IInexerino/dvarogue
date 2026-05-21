@@ -1,0 +1,85 @@
+mod game;
+mod menu;
+
+use bevy::{camera::ScalingMode, prelude::*};
+use crate::{game::{actors::{CharacterConfigs, spawn_starting_player}, map::render_map, scheduler::{TurnState, new_reset_clock, set_turn_state_awaitingplayerinput}, ui::{UiNeedsUpdate, init_game_ui, update_topleft_ui, update_topright_ui}}, menu::{choose_character, enter_game}};
+
+
+fn main() {
+    let mut app = App::new();
+
+    app.add_plugins(DefaultPlugins.set(
+            ImagePlugin::default_nearest()
+    ));
+    
+    app.init_state::<GameState>();
+    app.init_state::<TurnState>();
+
+    // temp
+
+    app.add_systems(Startup, setup);
+
+    // new game startup systems
+    app.add_systems(OnExit(GameState::InMenu),
+        (
+            new_reset_clock,
+            spawn_starting_player,
+            init_game_ui,
+            set_turn_state_awaitingplayerinput,
+        ).chain()
+    );
+
+        
+        
+    app.add_systems(OnEnter(GameState::InLevel), (
+        (
+            render_map
+        )
+    ));
+
+    app.add_systems(Update,(
+        // menu update systems
+        (
+            choose_character
+                .run_if(not(resource_exists::<CharacterConfigs>)),
+            // exit menu into game system
+            enter_game
+                .run_if(resource_exists::<CharacterConfigs>)
+        ).run_if(in_state(GameState::InMenu)),
+        (
+            // ui update systems
+            (
+                update_topright_ui,
+                update_topleft_ui,
+            ).run_if(resource_exists_and_equals(UiNeedsUpdate(true))),
+        ).run_if(in_state(GameState::InLevel)).chain()
+    ));
+
+    app.run();
+}
+
+
+#[derive(States, Default, Debug, Clone, PartialEq, Eq, Hash)]
+pub enum GameState {
+    #[default]
+    InMenu,
+    InLevel,
+    BetweenLevels,
+}
+
+
+// ----- Run Conditions -----
+
+
+// ----- Systems -----
+
+fn setup(mut commands: Commands) {
+    // - spawning camera -
+    commands.spawn((
+        Camera2d,
+        Projection::Orthographic(OrthographicProjection {
+            scaling_mode: ScalingMode::AutoMax { max_width: 960., max_height: 540. },
+            ..OrthographicProjection::default_2d()
+        })
+    ));
+}
