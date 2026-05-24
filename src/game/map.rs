@@ -107,6 +107,7 @@ impl NextFloorConfigs {
 pub struct Map {
     pub size: MapSize,
     pub tiles: Vec<Tile>,
+    pub regions:Vec<Vec<IVec2>>,
 }
 
 impl Map {
@@ -117,7 +118,8 @@ impl Map {
         let mut map = 
             Self {
                 size: configs.size,
-                tiles: vec![Tile::from(TileKind::WallRock); count]
+                tiles: vec![Tile::from(TileKind::WallRock); count],
+                regions: Vec::new()
             };
         
         map.set_boundary_border();

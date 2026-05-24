@@ -1,5 +1,5 @@
 use bevy::{ecs::{component::Component, query::With, resource::Resource, system::{Commands, Res, Single}}, ui::{Node, PositionType, px, widget::Text}, utils::default};
-use crate::game::{actors::{CharacterBackground, PlayerActor, Timing, combat::Health}, scheduler::Clock};
+use crate::game::{actors::{CharacterBackground, PlayerActor, combat::Health}, scheduler::{Clock, Timing}};
 
 /// Resource keeping track of whether any dynamic data displayed by the Ui has been changed. 
 /// It determines the result of the run condition that is applied to the Ui Update systems. 

@@ -89,11 +89,16 @@ impl Room {
 
 impl Map {
     pub fn carve_room(&mut self, room: &Room) {
+        let mut tiles_to_carve = Vec::new();
         for y in room.bottom()..=room.top(){
             for x in room.left()..=room.right() {
-                self.set_tile(&IVec2::new(x, y), TileKind::Floor).unwrap();
+                tiles_to_carve.push(IVec2::new(x, y));
             }
         }
+        for tile in &tiles_to_carve {
+            self.set_tile(tile, TileKind::Floor).unwrap();
+        }
+        self.regions.push(tiles_to_carve);
     }
 
     pub fn get_side_neighbors(&self, coords: &IVec2) -> Vec<IVec2> {
@@ -210,12 +215,13 @@ impl Map {
         }
     }
 
-
     fn draw_maze(&mut self, start_coords: IVec2) {
         let mut rng = rand::rng();
+        
         self.set_tile(&start_coords, TileKind::Floor).unwrap();
+        let mut maze_region = vec![start_coords];
 
-        let mut maze_stack: Vec<(IVec2, Option<Dir>)> = vec![(start_coords, None)];
+        let mut maze_stack = vec![(start_coords, None)];
 
         while !maze_stack.is_empty() {
             let current_cell = maze_stack.pop().unwrap();
@@ -245,20 +251,21 @@ impl Map {
             if !valid_side_neighbors.is_empty() { 
                 maze_stack.push(current_cell);
 
-                if let Some(dir) = current_cell.1 
-                && random_range(0..100) > PERCENT_CHANCE_TO_CHANGE_DIRECTION {
-                    if let Some(picked_neighbor) = valid_side_neighbors.iter().find(|&s| s.1 == dir) {
-                        self.set_tile(&picked_neighbor.0, TileKind::Floor).unwrap();
-                        maze_stack.push((picked_neighbor.0, Some(picked_neighbor.1)));
-                        continue
-                    }
-                } 
+                let picked_neighbor = 
+                if let Some(dir) = current_cell.1 && random_range(0..100) > PERCENT_CHANCE_TO_CHANGE_DIRECTION {
+                    valid_side_neighbors.iter().find(|&s| s.1 == dir)
+                } else {
+                    valid_side_neighbors.choose(&mut rng)
+                };
 
-                let picked_neighbor = valid_side_neighbors.choose(&mut rng).unwrap();
-                self.set_tile(&picked_neighbor.0, TileKind::Floor).unwrap();
-                maze_stack.push((picked_neighbor.0, Some(picked_neighbor.1)));
+                if let Some(picked_neighbor) = picked_neighbor {
+                    self.set_tile(&picked_neighbor.0, TileKind::Floor).unwrap();
+                    maze_stack.push((picked_neighbor.0, Some(picked_neighbor.1)));
+                    maze_region.push(picked_neighbor.0);
+                }
             }
-        } 
+        }
+        self.regions.push(maze_region); 
     }
 
     // 4th step
@@ -288,6 +295,11 @@ impl Map {
         }
     }
 
+    fn unify_regions(&mut self) {
+        
+    }
+
+
     pub fn remove_dead_ends(&mut self, dead_ends_to_remove: u32) {
         let mut removed = 0;
         let mut iterated = 0;
@@ -314,6 +326,7 @@ impl Map {
             iterated += 1;
         }
     }
+
 }
 
 impl Display for Map {
@@ -326,6 +339,8 @@ impl Display for Map {
                     TileKind::WallBedrock => str.push('B'),
                     TileKind::WallRock => str.push('#'),
                     TileKind::Floor => str.push('.'),
+                    TileKind::Door(true) => str.push('x'),
+                    TileKind::Door(false) => str.push('X'),
                     _ => panic!()
                 }
             }
