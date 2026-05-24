@@ -125,7 +125,8 @@ impl Map {
         map.set_boundary_border();
         map.place_random_rooms(150);
         map.draw_perfect_mazes();
-        map.remove_dead_ends(450);
+        map.unify_regions();
+        map.remove_dead_ends(500);
 
         map
     }

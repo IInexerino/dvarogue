@@ -1,12 +1,12 @@
-use std::fmt::Display;
-use bevy::math::IVec2;
-use rand::{random_range, seq::IndexedRandom};
+use std::{collections::HashMap, fmt::Display};
+use bevy::{math::IVec2, reflect::Reflect};
+use rand::{random_range, seq::{IndexedRandom, IteratorRandom}};
 use crate::game::map::{Map, TileKind};
 
 const MIN_ROOM_WIDTH:i32 = 3;
-const MAX_ROOM_WIDTH:i32 = 12;
+const MAX_ROOM_WIDTH:i32 = 13;
 const MIN_ROOM_HEIGHT:i32 = 3;
-const MAX_ROOM_HEIGHT:i32 = 12;
+const MAX_ROOM_HEIGHT:i32 = 13;
 
 const PERCENT_CHANCE_TO_CHANGE_DIRECTION: u8 = 5;
 
@@ -187,15 +187,15 @@ impl Map {
         let mut rng = rand::rng();
         for _ in 0..attempts {
 
-            let r_w: Vec<i32> = (MIN_ROOM_WIDTH..=MAX_ROOM_WIDTH).collect();
-            let r_h: Vec<i32> = (MIN_ROOM_HEIGHT..=MAX_ROOM_HEIGHT).collect();
+            let r_w: Vec<i32>  = (MIN_ROOM_WIDTH..=MAX_ROOM_WIDTH).filter(|a| a % 2 != 0).collect();
+            let r_h: Vec<i32> = (MIN_ROOM_HEIGHT..=MAX_ROOM_HEIGHT).filter(|a| a % 2 != 0).collect();
             let (room_width, room_height) = (
                 *r_w.choose(&mut rng).unwrap(),
                 *r_h.choose(&mut rng).unwrap()
             );
 
-            let b_l_x: Vec<i32> = (2..(self.size.width - 2 - (room_width - 1))).collect();
-            let b_l_y: Vec<i32> = (2..(self.size.height - 2 - (room_height - 1))).collect();
+            let b_l_x: Vec<i32> = (2..(self.size.width - 2 - (room_width - 1))).filter(|a| a % 2 == 0).collect();
+            let b_l_y: Vec<i32> = (2..(self.size.height - 2 - (room_height - 1))).filter(|a| a % 2 == 0).collect();
             let bottom_left_position = IVec2::new(
                 *b_l_x.choose(&mut rng).unwrap(),
                 *b_l_y.choose(&mut rng).unwrap()
@@ -281,10 +281,9 @@ impl Map {
             some_valid = false;
             for y in 2..self.size.height - 2 {
                 for x in 2..self.size.width - 2 {
+                    if x % 2 != 0 || y % 2 != 0 { continue }
                     let start_coords = IVec2::new(x, y);
-                    if self.get_tile(&start_coords).unwrap().kind == TileKind::Floor { 
-                        continue
-                    }
+                    if self.get_tile(&start_coords).unwrap().kind == TileKind::Floor { continue }
                     let neighbors = self.get_all_neighbors(&start_coords);
                     if neighbors.iter().all(|n_coords| self.get_tile(n_coords).unwrap().kind == TileKind::WallRock ) {
                         some_valid = true;
@@ -295,8 +294,80 @@ impl Map {
         }
     }
 
-    fn unify_regions(&mut self) {
-        
+    fn get_regions_hashmap(&self) -> HashMap<IVec2, usize> {
+        let mut regions_hashmap = HashMap::new();
+        for (idx, region) in self.regions.iter().enumerate() {
+            for tile in region {
+                regions_hashmap.insert(*tile, idx);
+            }
+        };
+        regions_hashmap
+    }
+
+    pub fn unify_regions(&mut self) {
+        let regions = self.get_regions_hashmap();
+        let mut connector_regions = HashMap::new();
+
+        for y in 2..self.size.height - 2 {
+            for x in 2..self.size.width - 2 {
+                let pos = IVec2::new(x, y);
+                if self.get_tile(&pos).unwrap().kind == TileKind::Floor { continue }
+
+                let mut adjacent_regions = Vec::new();
+                for cardinal_neighbor in self.get_side_neighbors(&pos) {    
+                    if let Some(region_id) = regions.get(&cardinal_neighbor) {
+                        if !adjacent_regions.contains(region_id) {
+                            adjacent_regions.push(*region_id);
+                        }
+                    } 
+                }
+                if adjacent_regions.len() < 2 { continue }
+                connector_regions.insert(pos, adjacent_regions);
+            }
+        }
+
+        let mut open_regions = Vec::new();
+        let mut merged = Vec::new();
+        for reg in 0..self.regions.len() {
+            merged.push(reg);
+            open_regions.push(reg);
+        } 
+
+        let mut rng = rand::rng();
+        let mut connectors: Vec<IVec2> = connector_regions.clone().into_keys().collect();
+
+        while open_regions.len() > 1 {
+            let connector = connectors.choose(&mut rng).expect("Error: no connectors present while multiple open regions exist!").clone();
+
+            self.set_tile(&connector, TileKind::Door(false)).unwrap();
+
+            let mut current_regions: Vec<usize> = connector_regions.get(&connector).unwrap()
+                .iter().map(| region | merged[*region] ).collect();
+
+            let surviving_region = *current_regions.first().unwrap();
+            let sources = current_regions.split_off(1);
+
+            for reg in 0..self.regions.len() {
+                if sources.contains(&merged[reg]) {
+                    merged[reg] = surviving_region
+                }
+            }
+
+            open_regions.retain(|a| !sources.contains(a));
+
+            connectors.retain(|a| {
+                let current_regions: Vec<usize> = connector_regions[a].iter().map(| a| merged[*a] ).collect();
+
+                if self.get_all_neighbors(&connector).contains(a) { return false }
+                if current_regions.len() > 1 { return true }
+                if random_range(0..100) < 2 {
+                    self.set_tile(a, TileKind::Door(false)).unwrap();
+                    return false
+                } 
+
+                return false
+            });
+        }
     }
 
 
