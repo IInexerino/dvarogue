@@ -15,36 +15,31 @@ fn main() {
     app.init_state::<GameState>();
     app.init_state::<TurnState>();
 
-    // temp
-
+    // startup systems
     app.add_systems(Startup, setup);
 
     // new game startup systems
-    app.add_systems(OnExit(GameState::InMenu),
-        (
+    app.add_systems(OnExit(GameState::InMenu),(
+            (
+                spawn_starting_player,
+                init_game_ui,
+            ).chain(),
             new_reset_clock,
-            spawn_starting_player,
-            init_game_ui,
             set_turn_state_awaitingplayerinput,
-        ).chain()
-    );
-
-        
-        
-    app.add_systems(OnEnter(GameState::InLevel), (
-        (
-            render_map
         )
+    );
+    
+    // new level startup systems
+    app.add_systems(OnEnter(GameState::InLevel), (
+        render_map,
     ));
 
     app.add_systems(Update,(
         // menu update systems
         (
-            choose_character
-                .run_if(not(resource_exists::<CharacterConfigs>)),
+            choose_character.run_if(not(resource_exists::<CharacterConfigs>)),
             // exit menu into game system
-            enter_game
-                .run_if(resource_exists::<CharacterConfigs>)
+            enter_game.run_if(resource_exists::<CharacterConfigs>)
         ).run_if(in_state(GameState::InMenu)),
         (
             // ui update systems
@@ -52,7 +47,7 @@ fn main() {
                 update_topright_ui,
                 update_topleft_ui,
             ).run_if(resource_exists_and_equals(UiNeedsUpdate(true))),
-        ).run_if(in_state(GameState::InLevel)).chain()
+        ).run_if(in_state(GameState::InLevel))
     ));
 
     app.run();
