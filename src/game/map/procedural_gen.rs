@@ -18,123 +18,63 @@ pub struct Room {
 }
 
 impl Room {
-    pub fn left(&self) -> i32 {
-        self.bottom_left.x
-    }
+    pub fn left(&self) -> i32 { self.bottom_left.x }
 
-    pub fn right(&self) -> i32 {
-        self.bottom_left.x + self.width - 1
-    }
+    pub fn right(&self) -> i32 { self.bottom_left.x + self.width - 1 }
 
-    pub fn bottom(&self) -> i32 {
-        self.bottom_left.y
-    }
+    pub fn bottom(&self) -> i32 { self.bottom_left.y }
 
-    pub fn top(&self) -> i32 {
-        self.bottom_left.y + self.height - 1
-    }
-    pub fn intersects(
-        &self,
-        other: &Self,
-    ) -> bool {
+    pub fn top(&self) -> i32 { self.bottom_left.y + self.height - 1 }
+    
+    pub fn intersects(&self, other: &Self) -> bool {
         !(self.right() < other.left()
         || self.left() > other.right()
         || self.top() < other.bottom()
         || self.bottom() > other.top())
     }
-    pub fn expanded(
-        &self,
-        amount: i32,
-    ) -> Self {
-        Self {
-            bottom_left:
-                self.bottom_left
-                - IVec2::splat(amount),
 
-            width:
-                self.width
-                + amount * 2,
-
-            height:
-                self.height
-                + amount * 2,
+    pub fn expanded(&self, amount: i32) -> Self {
+        Room {
+            bottom_left: self.bottom_left - IVec2::splat(amount),
+            width: self.width + amount * 2,
+            height: self.height + amount * 2,
         }
-    }
-    pub fn gap_to(
-        &self,
-        other: &Room,
-    ) -> (i32, i32) {
-
-        let horizontal_gap =
-            if self.right() < other.left() 
-                { other.left() - self.right() - 1 }
-            else if other.right() < self.left()
-                { self.left() - other.right() - 1}
-            else 
-                { 0 };
-
-        let vertical_gap =
-            if self.top() < other.bottom()
-                { other.bottom() - self.top() - 1 }
-            else if other.top() < self.bottom()
-                { self.bottom() - other.top() - 1 }
-            else { 0 };
-
-        (
-            horizontal_gap,
-            vertical_gap
-        )
     }
 }
 
 impl Map {
     pub fn carve_room(&mut self, room: &Room) {
-        let mut tiles_to_carve = Vec::new();
+        let mut room_region = Vec::new();
+
         for y in room.bottom()..=room.top(){
             for x in room.left()..=room.right() {
-                tiles_to_carve.push(IVec2::new(x, y));
+                let coord = IVec2::new(x, y);
+                self.set_tile(&coord, TileKind::Floor).unwrap();
+                room_region.push(coord)
             }
         }
-        for tile in &tiles_to_carve {
-            self.set_tile(tile, TileKind::Floor).unwrap();
-        }
-        self.regions.push(tiles_to_carve);
+
+        self.regions.push(room_region);
     }
 
     pub fn get_side_neighbors(&self, coords: &IVec2) -> Vec<IVec2> {
         let mut neighbors = Vec::new();
 
-        if coords.x - 1 > 0 {
-            neighbors.push(IVec2::new(coords.x - 1, coords.y));
-        }
-        if coords.y - 1 > 0 {
-            neighbors.push(IVec2::new(coords.x, coords.y - 1));
-        }
-        if coords.x + 1 < self.size.width {
-            neighbors.push(IVec2::new(coords.x + 1, coords.y));
-        }
-        if coords.y + 1 < self.size.height {
-            neighbors.push(IVec2::new(coords.x, coords.y + 1));
-        }
+        if coords.x - 1 > 0 { neighbors.push(IVec2::new(coords.x - 1, coords.y)) }
+        if coords.y - 1 > 0 { neighbors.push(IVec2::new(coords.x, coords.y - 1)) }
+        if coords.x + 1 < self.size.width { neighbors.push(IVec2::new(coords.x + 1, coords.y)) }
+        if coords.y + 1 < self.size.height { neighbors.push(IVec2::new(coords.x, coords.y + 1)) }
 
-        neighbors
+        return neighbors
     }
 
     pub fn get_side_neighbors_with_dir(&self, coords: &IVec2) -> Vec<(IVec2, Dir)> {
         let mut neighbors = Vec::new();
 
-        if coords.x - 1 > 0 {
-            neighbors.push((IVec2::new(coords.x - 1, coords.y), Dir::W));
-        }
-        if coords.y - 1 > 0 {
-            neighbors.push((IVec2::new(coords.x, coords.y - 1), Dir::S));
-        }
-        if coords.x + 1 < self.size.width {
-            neighbors.push((IVec2::new(coords.x + 1, coords.y), Dir::E));
-        }
-        if coords.y + 1 < self.size.height {
-            neighbors.push((IVec2::new(coords.x, coords.y + 1), Dir::N));
-        }
+        if coords.x - 1 > 0 { neighbors.push((IVec2::new(coords.x - 1, coords.y), Dir::W)) }
+        if coords.y - 1 > 0 { neighbors.push((IVec2::new(coords.x, coords.y - 1), Dir::S)) }
+        if coords.x + 1 < self.size.width { neighbors.push((IVec2::new(coords.x + 1, coords.y), Dir::E)) }
+        if coords.y + 1 < self.size.height { neighbors.push((IVec2::new(coords.x, coords.y + 1), Dir::N)) }
 
         neighbors
     }
@@ -142,20 +82,16 @@ impl Map {
     pub fn get_diagonal_neighbors(&self, coords: &IVec2) -> Vec<IVec2> {
         let mut neighbors = Vec::new();
 
-        if coords.x - 1 > 0 
-        && coords.y - 1 > 0 {
+        if coords.x - 1 > 0 && coords.y - 1 > 0 {
             neighbors.push(IVec2::new(coords.x - 1, coords.y - 1));
         }
-        if coords.x - 1 > 0
-        && coords.y + 1 < self.size.height {
+        if coords.x - 1 > 0 && coords.y + 1 < self.size.height {
             neighbors.push(IVec2::new(coords.x - 1, coords.y + 1));
         }
-        if coords.x + 1 < self.size.width
-        && coords.y - 1 > 0 {
+        if coords.x + 1 < self.size.width && coords.y - 1 > 0 {
             neighbors.push(IVec2::new(coords.x + 1, coords.y - 1));
         }
-        if coords.y + 1 < self.size.height
-        && coords.x + 1 < self.size.width {
+        if coords.y + 1 < self.size.height && coords.x + 1 < self.size.width {
             neighbors.push(IVec2::new(coords.x + 1, coords.y + 1));
         }
 
