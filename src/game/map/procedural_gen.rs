@@ -335,7 +335,6 @@ impl Map {
                     }
                 }
             }
-            
             iterated += 1;
         }
     }
@@ -359,7 +358,6 @@ impl Display for Map {
             }
             str.push('\n');
         }
-
         write!(f, "{str}")
     }
 }
