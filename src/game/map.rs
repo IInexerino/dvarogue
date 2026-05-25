@@ -2,13 +2,13 @@ pub mod procedural_gen;
 
 use thiserror::Error;
 use std::{collections::HashMap};
-use bevy::{ asset::AssetServer, ecs::{component::Component, entity::Entity, resource::Resource, system::{Commands, Res}}, math::IVec2, sprite::Sprite, state::state::States, transform::components::Transform};
+use bevy::{ asset::AssetServer, color::{Color, palettes::css::BLACK}, ecs::{component::Component, entity::Entity, resource::Resource, system::{Commands, Res}}, math::IVec2, sprite::Sprite, state::state::States, transform::components::Transform};
 
 pub fn render_map(
     mut commands: Commands,
     asset_server: Res<AssetServer>
 ) {
-    let mut map = Map::new_from_configs(
+    let map = Map::new_from_configs(
             NextFloorConfigs::from_floor(
                 crate::game::map::DungeonFloor::Dungeon(1)
             ).unwrap()
@@ -23,18 +23,13 @@ pub fn render_map(
             -1.
         ); 
 
-        let sprite_path = match tile.kind {
-            TileKind::Floor => Some("purple_floor.png"),
-            TileKind::WallBedrock => Some("wallrock.png"),
-            TileKind::WallRock => Some("wallrock.png"),
-            _ => None
-        };
+        let sprite = tile.kind.to_sprite(&asset_server);
 
         commands.spawn((
             TilePos(coords),
             CollisionKind::from(&tile.kind),
             transform,
-            Sprite::from_image(asset_server.load(sprite_path.unwrap())),
+            sprite.expect("Tilekind with unconfigured sprite"),
         ));
 
     }
@@ -205,6 +200,24 @@ pub enum TileKind {
     DeepWater,
     StairsDown,
     Door(bool),
+}
+
+impl TileKind {
+    fn to_sprite(&self, asset_server: &Res<AssetServer>) -> Option<Sprite> {
+        match self {
+            TileKind::Floor => Some(Sprite::from_image(asset_server.load("purple_floor.png"))),
+            TileKind::WallBedrock => Some(Sprite::from_image(asset_server.load("wallrock.png"))),
+            TileKind::WallRock => Some(Sprite::from_image(asset_server.load("wallrock.png"))),
+            TileKind::Door(false) => {
+                let mut sprite = Sprite::from_image(asset_server.load("wallrock.png"));
+                sprite.color = Color::Srgba(BLACK);
+                Some(sprite)
+            },
+            TileKind::Door(true) => Some(Sprite::from_image(asset_server.load("purple_floor.png"))),
+
+            _ => None
+        }
+    }
 }
 
 #[derive(Component)]
