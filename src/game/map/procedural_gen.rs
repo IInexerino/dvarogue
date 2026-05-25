@@ -1,6 +1,6 @@
 use std::{collections::HashMap, fmt::Display};
-use bevy::{math::IVec2, reflect::Reflect};
-use rand::{random_range, seq::{IndexedRandom, IteratorRandom}};
+use bevy::math::IVec2;
+use rand::{random_range, seq::{IndexedRandom}};
 use crate::game::map::{Map, TileKind};
 
 const MIN_ROOM_WIDTH:i32 = 3;
@@ -185,7 +185,13 @@ impl Map {
     pub fn place_random_rooms(&mut self, attempts: u32) {
         let mut rooms = Vec::new();
         let mut rng = rand::rng();
-        for _ in 0..attempts {
+
+        let starting_room = Room {width: 5, height: 5, bottom_left: IVec2::new((self.size.width/2) - 1, (self.size.height/2) - 1)};
+        self.carve_room(&starting_room);
+        rooms.push(starting_room);
+
+        // start at 1 as we placed our starting room already;
+        for _ in 1..attempts {
 
             let r_w: Vec<i32>  = (MIN_ROOM_WIDTH..=MAX_ROOM_WIDTH).filter(|a| a % 2 != 0).collect();
             let r_h: Vec<i32> = (MIN_ROOM_HEIGHT..=MAX_ROOM_HEIGHT).filter(|a| a % 2 != 0).collect();
