@@ -2,7 +2,7 @@ pub mod procedural_gen;
 
 use thiserror::Error;
 use std::{collections::HashMap};
-use bevy::{ asset::AssetServer, color::{Color, palettes::css::BLACK}, ecs::{component::Component, entity::Entity, resource::Resource, system::{Commands, Res}}, math::IVec2, prelude::{Deref, DerefMut}, sprite::Sprite, transform::components::Transform};
+use bevy::{ asset::AssetServer, color::{Color, palettes::css::{BLACK, PINK}}, ecs::{component::Component, entity::Entity, resource::Resource, system::{Commands, Res}}, math::IVec2, prelude::{Deref, DerefMut}, sprite::Sprite, transform::components::Transform};
 
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone)]
@@ -46,11 +46,15 @@ impl TileKind {
     fn to_sprite(&self, asset_server: &Res<AssetServer>) -> Option<Sprite> {
         match self {
             TileKind::Floor => Some(Sprite::from_image(asset_server.load("purple_floor.png"))),
-            TileKind::WallBedrock => Some(Sprite::from_image(asset_server.load("wallrock.png"))),
+            TileKind::WallBedrock => {
+                let mut sprite = Sprite::from_image(asset_server.load("wallrock.png")); 
+                sprite.color = Color::Srgba(BLACK);
+                Some(sprite)
+            } 
             TileKind::WallRock => Some(Sprite::from_image(asset_server.load("wallrock.png"))),
             TileKind::Door(false) => {
                 let mut sprite = Sprite::from_image(asset_server.load("wallrock.png"));
-                sprite.color = Color::Srgba(BLACK);
+                sprite.color = Color::Srgba(PINK);
                 Some(sprite)
             },
             TileKind::Door(true) => Some(Sprite::from_image(asset_server.load("purple_floor.png"))),
