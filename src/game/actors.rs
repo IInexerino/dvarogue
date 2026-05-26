@@ -2,9 +2,9 @@ pub mod combat;
 pub mod actions;
 
 use std::fmt::Display;
-use bevy::{asset::AssetServer, ecs::{component::Component, resource::Resource, system::{Commands, Res}}, math::IVec2, sprite::Sprite};
+use bevy::{asset::AssetServer, ecs::{component::Component, resource::Resource, system::{Commands, Res}}, math::IVec2, prelude::{Deref, DerefMut}, sprite::Sprite};
 use rand::seq::IndexedRandom;
-use crate::game::{actors::{actions::PendingAction, combat::Health}, scheduler::Timing};
+use crate::game::{actors::combat::Health, map::{CurrentFloor, DiscoveredFloors}, scheduler::Timing};
 
 /// System for building and spawning a player entity based on [`CharacterConfigs`].
 /// 
@@ -14,8 +14,17 @@ use crate::game::{actors::{actions::PendingAction, combat::Health}, scheduler::T
 pub fn spawn_starting_player(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
-    character_configs: Res<CharacterConfigs>
+    character_configs: Res<CharacterConfigs>,
+    maps: Res<DiscoveredFloors>,
+    current_floor: Res<CurrentFloor>
 ) {
+    let mapsize = &maps[&current_floor].0.size;
+    let (x, y) = (
+        mapsize.width / 2,
+        mapsize.height / 2
+    );
+
+    println!("({x}, {y})");
 
     commands.spawn(
         (
@@ -26,7 +35,8 @@ pub fn spawn_starting_player(
                 delay_multiplier: character_configs.starting_delay_multiplier,
             },
             Sprite::from_image(asset_server.load(&character_configs.sprite)),
-            character_configs.background.clone()
+            character_configs.background.clone(),
+            Position(IVec2::new(x, y))
         )
     );
 
@@ -121,7 +131,6 @@ impl From<CharacterBackground> for CharacterConfigs {
 /// 
 /// automatically adds default components: [`PendingAction`]
 #[derive(Component, Default)]
-#[require(PendingAction)]
 pub struct Actor;
 
 /// Marker [`Component`] for enemy actor entities.
@@ -138,13 +147,13 @@ pub struct EnemyActor;
 #[require(Actor, Position)]
 pub struct PlayerActor;
 
-/// Marker [`Component`] for the player character Entity, defining the player's visibility radius.
+/// [`Component`] for the player character Entity, defining the player's visibility radius.
 #[derive(Component)]
-pub struct Visibility {
+pub struct Vision {
     pub radius: u8
 }
 
-/// Marker [`Component`] for the game grid position of an Entity.
-#[derive(Component, Default)]
+/// [`Component`] for the game grid position of an Entity.
+#[derive(Component, Default, Deref, DerefMut)]
 pub struct Position(pub IVec2);
 

@@ -1,9 +1,4 @@
-use bevy::{ecs::{component::Component, entity::Entity}, math::IVec2};
-
-#[derive(Component, Default)]
-pub struct PendingAction(
-    pub Option<Action>
-);
+use bevy::{ecs::entity::Entity, math::IVec2};
 
 pub enum Action {
     Move(IVec2),

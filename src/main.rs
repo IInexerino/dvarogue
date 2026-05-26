@@ -2,7 +2,7 @@ mod game;
 mod menu;
 
 use bevy::{camera::ScalingMode, prelude::*};
-use crate::{game::{actors::{CharacterConfigs, spawn_starting_player}, map::render_map, scheduler::{TurnState, new_reset_clock, set_turn_state_awaitingplayerinput}, ui::{UiNeedsUpdate, init_game_ui, update_topleft_ui, update_topright_ui}}, menu::{choose_character, enter_game}};
+use crate::{game::{actors::{CharacterConfigs, spawn_starting_player}, map::{render_current_map, setup_first_map}, scheduler::{reset_clock, reset_scheduler}, ui::{UiNeedsUpdate, init_game_ui, update_topleft_ui, update_topright_ui}}, menu::{choose_character, enter_game}};
 
 
 fn main() {
@@ -13,7 +13,6 @@ fn main() {
     ));
     
     app.init_state::<GameState>();
-    app.init_state::<TurnState>();
 
     // startup systems
     app.add_systems(Startup, setup);
@@ -21,17 +20,18 @@ fn main() {
     // new game startup systems
     app.add_systems(OnExit(GameState::InMenu),(
             (
+                setup_first_map,
                 spawn_starting_player,
+                reset_clock,
                 init_game_ui,
             ).chain(),
-            new_reset_clock,
-            set_turn_state_awaitingplayerinput,
         )
     );
     
     // new level startup systems
     app.add_systems(OnEnter(GameState::InLevel), (
-        render_map,
+        reset_scheduler, 
+        render_current_map,
     ));
 
     app.add_systems(Update,(
@@ -73,6 +73,7 @@ fn setup(mut commands: Commands) {
     commands.spawn((
         Camera2d,
         Projection::Orthographic(OrthographicProjection {
+            scale: 3.5,
             scaling_mode: ScalingMode::AutoMax { max_width: 960., max_height: 540. },
             ..OrthographicProjection::default_2d()
         })

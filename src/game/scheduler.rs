@@ -1,27 +1,24 @@
 use std::{cmp::Ordering, collections::BinaryHeap};
-use bevy::{ecs::{component::Component, entity::Entity, resource::Resource, system::{Commands, ResMut}}, prelude::{Deref, DerefMut}, state::state::{NextState, States}};
+use bevy::{ecs::{component::Component, entity::{ContainsEntity, Entity}, query::With, resource::Resource, system::{Commands, Single}}, prelude::{Deref, DerefMut}, state::state::{NextState, States}};
 
-use crate::game::actors::actions::Action;
+use crate::game::actors::{PlayerActor, actions::Action};
 
-/// Creates a new default [`Clock`] resource, or resets an existing one to default.
-pub fn new_reset_clock(mut commands: Commands) {
+/// Creates a new default [`Clock`], [`Scheduler`] resource, or resets an existing one to default.
+pub fn reset_clock(mut commands: Commands) {
     commands.insert_resource(Clock::default());
 }
 
-/// State which defines whether it is a player's turn and an action selection should be waited for, 
-/// or if the player has finished performing the action and other things should run.
-#[derive(States, Default, Hash, Debug, Clone, Eq, PartialEq)]
-pub enum TurnState {
-    #[default]
-    NotInGame,
-    AwaitingPlayerInput,
-    RunningSimulation,
+pub fn reset_scheduler(mut commands: Commands, player_ent: Single<Entity, With<PlayerActor>>) {
+    commands.insert_resource(Scheduler { 
+        queue: BinaryHeap::from([ScheduledActor {
+            entity: player_ent.entity(),
+            next_tick: 0,
+            priority: 3
+        }]) 
+    });
 }
 
-/// System to set the [`TurnState`] to [`TurnState::AwaitingPlayerInput`]
-pub fn set_turn_state_awaitingplayerinput(mut next_state: ResMut<NextState<TurnState>>) {
-    next_state.set(TurnState::AwaitingPlayerInput);
-}
+pub fn action_selection() {}
 
 /// Total turn counter that runs from the start to the end of a game.
 /// 
@@ -48,6 +45,7 @@ impl Clock {
         }
     }
 }
+
 
 /// Component for Entities with [`Actor`].
 /// 
@@ -108,6 +106,12 @@ pub struct Scheduler {
 pub struct ScheduledActor {
     pub entity: Entity,
     pub next_tick: u64,
+    /// Higher priority will act before if the next_tick is the same as another actor. Can also be read for actor type.
+    ///
+    /// - world = 0
+    /// - enemies = 1
+    /// - allies = 2
+    /// - player = 3
     pub priority: u8,
 }
 

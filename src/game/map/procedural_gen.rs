@@ -1,4 +1,4 @@
-use std::{collections::HashMap, fmt::Display};
+use std::{collections::{HashMap, HashSet}, fmt::Display};
 use bevy::math::IVec2;
 use rand::{random_range, seq::{IndexedRandom}};
 use crate::game::map::{Map, TileKind};
@@ -246,6 +246,13 @@ impl Map {
         regions_hashmap
     }
 
+    fn root(merged: &[usize], mut r: usize) -> usize {
+        while merged[r] != r {
+            r = merged[r];
+        };
+        r
+    }
+
     pub fn unify_regions(&mut self) {
         let regions = self.get_regions_hashmap();
         let mut connector_regions = HashMap::new();
@@ -284,13 +291,13 @@ impl Map {
             self.set_tile(&connector, TileKind::Door(false)).unwrap();
 
             let mut current_regions: Vec<usize> = connector_regions.get(&connector).unwrap()
-                .iter().map(| region | merged[*region] ).collect();
+                .iter().map(| region | Self::root(&merged, *region) ).collect();
 
             let surviving_region = *current_regions.first().unwrap();
             let sources = current_regions.split_off(1);
 
             for reg in 0..self.regions.len() {
-                if sources.contains(&merged[reg]) {
+                if sources.contains(&Self::root(&merged, reg)) {
                     merged[reg] = surviving_region
                 }
             }
@@ -298,9 +305,9 @@ impl Map {
             open_regions.retain(|a| !sources.contains(a));
 
             connectors.retain(|a| {
-                let current_regions: Vec<usize> = connector_regions[a].iter().map(| a| merged[*a] ).collect();
+                let current_regions: HashSet<usize> = connector_regions[a].iter().map(| a| merged[*a] ).collect();
 
-                if self.get_all_neighbors(&connector).contains(a) { return false }
+                if self.get_side_neighbors(&connector).contains(a) { return false }
                 if current_regions.len() > 1 { return true }
                 if random_range(0..100) < 2 {
                     self.set_tile(a, TileKind::Door(false)).unwrap();
@@ -377,11 +384,9 @@ mod tests {
 
     #[test]
     fn creteg_and_print_map() {
-        let map = Map::new_from_configs(
-            crate::game::map::NextFloorConfigs::from_floor(
-                crate::game::map::DungeonFloor::Dungeon(1)
-            ).unwrap()
-        );
+        let map = Map::new_from_dungeon_floor(
+            &crate::game::map::DungeonFloor::first_floor(crate::game::map::DungeonKind::Dungeon)
+        ).unwrap();
         print!("{map}");
     }
 }
