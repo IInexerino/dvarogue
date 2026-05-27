@@ -20,8 +20,8 @@ pub fn spawn_starting_player(
 ) {
     let mapsize = &maps[&current_floor].0.size;
     let (x, y) = (
-        mapsize.width / 2,
-        mapsize.height / 2
+        mapsize.width / 2 + 1,
+        mapsize.height / 2 + 1
     );
 
     println!("({x}, {y})");

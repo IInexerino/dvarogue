@@ -1,6 +1,6 @@
 use std::{collections::{HashMap, HashSet}, fmt::Display};
 use bevy::math::IVec2;
-use rand::{random_range, seq::{IndexedRandom}};
+use rand::{random_range, seq::{IndexedRandom, IteratorRandom}};
 use crate::game::map::{Map, TileKind};
 
 const MIN_ROOM_WIDTH:i32 = 3;
@@ -62,8 +62,8 @@ impl Map {
 
         if coords.x - 1 > 0 { neighbors.push(IVec2::new(coords.x - 1, coords.y)) }
         if coords.y - 1 > 0 { neighbors.push(IVec2::new(coords.x, coords.y - 1)) }
-        if coords.x + 1 < self.size.width { neighbors.push(IVec2::new(coords.x + 1, coords.y)) }
-        if coords.y + 1 < self.size.height { neighbors.push(IVec2::new(coords.x, coords.y + 1)) }
+        if coords.x + 1 < self.size.width - 1 { neighbors.push(IVec2::new(coords.x + 1, coords.y)) }
+        if coords.y + 1 < self.size.height - 1 { neighbors.push(IVec2::new(coords.x, coords.y + 1)) }
 
         return neighbors
     }
@@ -73,8 +73,8 @@ impl Map {
 
         if coords.x - 1 > 0 { neighbors.push((IVec2::new(coords.x - 1, coords.y), Dir::W)) }
         if coords.y - 1 > 0 { neighbors.push((IVec2::new(coords.x, coords.y - 1), Dir::S)) }
-        if coords.x + 1 < self.size.width { neighbors.push((IVec2::new(coords.x + 1, coords.y), Dir::E)) }
-        if coords.y + 1 < self.size.height { neighbors.push((IVec2::new(coords.x, coords.y + 1), Dir::N)) }
+        if coords.x + 1 < self.size.width - 1 { neighbors.push((IVec2::new(coords.x + 1, coords.y), Dir::E)) }
+        if coords.y + 1 < self.size.height - 1 { neighbors.push((IVec2::new(coords.x, coords.y + 1), Dir::N)) }
 
         neighbors
     }
@@ -236,86 +236,89 @@ impl Map {
         }
     }
 
-    fn get_regions_hashmap(&self) -> HashMap<IVec2, usize> {
-        let mut regions_hashmap = HashMap::new();
-        for (idx, region) in self.regions.iter().enumerate() {
-            for tile in region {
-                regions_hashmap.insert(*tile, idx);
-            }
-        };
-        regions_hashmap
-    }
-
-    fn root(merged: &[usize], mut r: usize) -> usize {
-        while merged[r] != r {
-            r = merged[r];
-        };
-        r
+    fn get_region_of_tile(&self, tile: &IVec2) -> Option<usize> {
+        self.regions.iter().position(|r | r.contains(tile))
     }
 
     pub fn unify_regions(&mut self) {
-        let regions = self.get_regions_hashmap();
+        let mut rng = rand::rng();
+
+        // hashmap with connector locations (keys), and a vector of all the regions this connector connects (values)
         let mut connector_regions = HashMap::new();
 
+        // index corresponds to regions, value corresponds to what regions those regions 
+        let mut region_index: Vec<usize> = (0..self.regions.len()).collect();
+        let mut separate_regions_remaining = self.regions.len();
+
+        // fill connector regions with all avaliable connectors on the map and their corresponding regions
         for y in 2..self.size.height - 2 {
             for x in 2..self.size.width - 2 {
                 let pos = IVec2::new(x, y);
-                if self.get_tile(&pos).unwrap().kind == TileKind::Floor { continue }
+                let tile_kind = self.get_tile(&pos).unwrap().kind.clone();
 
-                let mut adjacent_regions = Vec::new();
-                for cardinal_neighbor in self.get_side_neighbors(&pos) {    
-                    if let Some(region_id) = regions.get(&cardinal_neighbor) {
-                        if !adjacent_regions.contains(region_id) {
-                            adjacent_regions.push(*region_id);
-                        }
+                if tile_kind == TileKind::Floor || tile_kind == TileKind::WallBedrock { 
+                    continue 
+                }
+
+                // register of regions of the adjascent tiles
+                let mut adjacent_regions = HashSet::new();
+
+                // filling the register with regions of neighboring tiles
+                for neighbor in self.get_side_neighbors(&pos) {    
+                    // only if a tile has a region will it return Some with the idx of that region
+                    if let Some(region_id) = self.get_region_of_tile(&neighbor) {
+                        // no duplicate regions because of hashset
+                        adjacent_regions.insert(region_id);
                     } 
                 }
-                if adjacent_regions.len() < 2 { continue }
-                connector_regions.insert(pos, adjacent_regions);
+
+                // if we have more than one neighboring tile be of a unique region, we treat this tile as a connector
+                if adjacent_regions.len() > 1 { 
+                    connector_regions.insert(pos, adjacent_regions);
+                }
             }
         }
 
-        let mut open_regions = Vec::new();
-        let mut merged = Vec::new();
-        for reg in 0..self.regions.len() {
-            merged.push(reg);
-            open_regions.push(reg);
-        } 
+        while separate_regions_remaining > 1 {
+            let connector_pos = connector_regions.keys().choose(&mut rng)
+                .expect("Error: no connectors present while multiple open regions exist!").clone();
 
-        let mut rng = rand::rng();
-        let mut connectors: Vec<IVec2> = connector_regions.clone().into_keys().collect();
+            self.set_tile(&connector_pos, TileKind::Door(false)).unwrap();
 
-        while open_regions.len() > 1 {
-            let connector = connectors.choose(&mut rng).expect("Error: no connectors present while multiple open regions exist!").clone();
+            // separate regions into surviving and sources
+            let mut connectors_regions = connector_regions[&connector_pos].iter();
+            let surviving_region = connectors_regions.next().unwrap().clone();
+            let sources = connectors_regions.cloned().collect::<HashSet<usize>>();
 
-            self.set_tile(&connector, TileKind::Door(false)).unwrap();
-
-            let mut current_regions: Vec<usize> = connector_regions.get(&connector).unwrap()
-                .iter().map(| region | Self::root(&merged, *region) ).collect();
-
-            let surviving_region = *current_regions.first().unwrap();
-            let sources = current_regions.split_off(1);
-
-            for reg in 0..self.regions.len() {
-                if sources.contains(&Self::root(&merged, reg)) {
-                    merged[reg] = surviving_region
-                }
+            for source in &sources {
+                // change the field of the source region to the surviving region's field
+                region_index[source.clone()] = surviving_region;
+                // number of separate regions reduced
+                separate_regions_remaining -= 1;
             }
 
-            open_regions.retain(|a| !sources.contains(a));
+            connector_regions.retain(|p, r| {
+                for source in &sources {
+                    // if the connector connects any of the source regions
+                    if r.get(source).is_some() {
+                        // all of those source regions now correspond to the surviving region, so we remove them, and add it
+                        r.remove(source);
+                        r.insert(surviving_region);
+                    }
+                };
 
-            connectors.retain(|a| {
-                let current_regions: HashSet<usize> = connector_regions[a].iter().map(| a| merged[*a] ).collect();
-
-                if self.get_side_neighbors(&connector).contains(a) { return false }
-                if current_regions.len() > 1 { return true }
-                if random_range(0..100) < 2 {
-                    self.set_tile(a, TileKind::Door(false)).unwrap();
+                if self.get_side_neighbors(&connector_pos).contains(&p) { return false }
+                if random_range(0..100) < 1 { 
+                    self.set_tile(p, TileKind::Door(false)).unwrap();  
                     return false
-                } 
+                }
+                if r.len() == 1 { return false }
+                return true
 
-                return false
             });
+
+            // now we will remove entries from connector_regions that no longer qualify as connectors
+            // This happens when they no longer touch more than one region
         }
     }
 
