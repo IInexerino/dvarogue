@@ -6,6 +6,8 @@ edition = "2024"
 [dependencies]
 bevy = { version = "0.18.1", features = ["dynamic_linking", "debug"] }
 rand = "=0.10.1"
+serde = "1.0.228"
+serde_json = "1.0.150"
 thiserror = { version = "1.0" }
 
 [profile.dev]

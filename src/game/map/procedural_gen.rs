@@ -1,6 +1,7 @@
 use std::{collections::{HashMap, HashSet}, fmt::Display};
 use bevy::math::IVec2;
 use rand::{random_range, seq::{IndexedRandom, IteratorRandom}};
+use serde::{Deserialize, Serialize};
 use crate::game::map::{Map, TileKind};
 
 const MIN_ROOM_WIDTH:i32 = 3;
@@ -297,6 +298,8 @@ impl Map {
                 separate_regions_remaining -= 1;
             }
 
+            // now we will remove entries from connector_regions that no longer qualify as connectors
+            // This happens when they no longer touch more than one region
             connector_regions.retain(|p, r| {
                 for source in &sources {
                     // if the connector connects any of the source regions
@@ -316,9 +319,6 @@ impl Map {
                 return true
 
             });
-
-            // now we will remove entries from connector_regions that no longer qualify as connectors
-            // This happens when they no longer touch more than one region
         }
     }
 
@@ -372,7 +372,7 @@ impl Display for Map {
     }
 }
 
-#[derive(Clone, Copy, PartialEq)]
+#[derive(Clone, Copy, PartialEq, Serialize, Deserialize, Eq, Hash)]
 pub enum Dir {
     N,
     S,
@@ -383,7 +383,11 @@ pub enum Dir {
 #[cfg(test)]
 mod tests {
 
-    use super::*;
+    use serde::Serialize;
+
+use crate::KeybindRegister;
+
+use super::*;
 
     #[test]
     fn creteg_and_print_map() {
@@ -392,4 +396,5 @@ mod tests {
         ).unwrap();
         print!("{map}");
     }
+
 }

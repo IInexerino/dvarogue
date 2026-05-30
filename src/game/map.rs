@@ -75,7 +75,6 @@ impl From<&TileKind> for CollisionKind {
     fn from(value: &TileKind) -> Self {
         match value {
             TileKind::WallBedrock => Self::Solid,
-            TileKind::Door(false) => Self::Solid,
             TileKind::WallDirt => Self::Digable(1),
             TileKind::WallWood => Self::Digable(2),
             TileKind::WallRock => Self::Digable(4),
@@ -92,9 +91,10 @@ pub fn setup_first_map(
     let first_floor = DungeonFloor::first_floor(DungeonKind::Dungeon);
 
     let map = Map::new_from_dungeon_floor(&first_floor).unwrap();
+    let mapsize = map.size.clone();
 
     commands.insert_resource(DiscoveredFloors(
-        HashMap::from([(first_floor.clone(), (map, SpatialMap::new_empty()))])
+        HashMap::from([(first_floor.clone(), (map, SpatialMap::new_empty(&mapsize)))])
     ));
     commands.insert_resource(CurrentFloor(first_floor));
 }
@@ -231,6 +231,7 @@ impl Map {
     }
 }
 
+#[derive(Clone)]
 pub struct MapSize {
     pub width: i32,
     pub height: i32
@@ -255,14 +256,21 @@ impl From<TileKind> for Tile {
     }
 }
 
-#[derive(Resource)]
 pub struct SpatialMap {
     pub entities: HashMap<IVec2, Vec<Entity>>,
 }
 
 impl SpatialMap {
-    pub fn new_empty() -> Self {
-        SpatialMap { entities: HashMap::new() }
+    pub fn new_empty(map_size: &MapSize) -> Self {
+        let mut hashmap = HashMap::new();
+
+        for y in 0..map_size.height {
+            for x in 0..map_size.width {
+                hashmap.insert(IVec2::new(x, y), Vec::new());
+            }
+        }
+
+        SpatialMap { entities: hashmap }
     }
 }
 

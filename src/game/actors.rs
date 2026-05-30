@@ -1,10 +1,10 @@
 pub mod combat;
 pub mod actions;
 
-use std::fmt::Display;
-use bevy::{asset::AssetServer, ecs::{component::Component, resource::Resource, system::{Commands, Res}}, math::IVec2, prelude::{Deref, DerefMut}, sprite::Sprite};
+use std::{fmt::Display, thread::current};
+use bevy::{asset::AssetServer, ecs::{component::Component, resource::Resource, system::{Commands, Res, ResMut}}, math::IVec2, prelude::{Deref, DerefMut}, reflect::Reflect, sprite::Sprite};
 use rand::seq::IndexedRandom;
-use crate::game::{actors::combat::Health, map::{CurrentFloor, DiscoveredFloors}, scheduler::Timing};
+use crate::game::{actors::{actions::Action, combat::Health}, inputs::GameInput, map::{CurrentFloor, DiscoveredFloors}};
 
 /// System for building and spawning a player entity based on [`CharacterConfigs`].
 /// 
@@ -15,32 +15,36 @@ pub fn spawn_starting_player(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
     character_configs: Res<CharacterConfigs>,
-    maps: Res<DiscoveredFloors>,
+    mut maps: ResMut<DiscoveredFloors>,
     current_floor: Res<CurrentFloor>
 ) {
-    let mapsize = &maps[&current_floor].0.size;
-    let (x, y) = (
+    let current_floor = maps.get_mut(&current_floor).expect("Error: CurrentFloor not present in DiscoveredFloors");
+    let mapsize = &current_floor.0.size;
+    let spatial_map = &mut current_floor.1;
+
+    let coords = IVec2::new(
         mapsize.width / 2 + 1,
         mapsize.height / 2 + 1
     );
 
-    println!("({x}, {y})");
-
-    commands.spawn(
+    let player_entity = commands.spawn(
         (
             PlayerActor,
+            Actor{ delay_mult: character_configs.starting_delay_multiplier },
             character_configs.health,
-            Timing {
-                next_action_tick: 0,
-                delay_multiplier: character_configs.starting_delay_multiplier,
-            },
             Sprite::from_image(asset_server.load(&character_configs.sprite)),
             character_configs.background.clone(),
-            Position(IVec2::new(x, y))
+            Position(coords)
         )
-    );
+    ).id();
+
+    println!("{:?}", coords);
+
+    spatial_map.entities.get_mut(&coords).expect("Error: Coords not present in SpatialMap").push(player_entity);
 
     commands.remove_resource::<CharacterConfigs>();
+    commands.insert_resource(PlayerSelectedAction(None));
+    commands.init_resource::<GameInput>();
 }
 
 
@@ -130,21 +134,55 @@ impl From<CharacterBackground> for CharacterConfigs {
 /// Marker [`Component`] for any Entity that would be able to engage in actions.
 /// 
 /// automatically adds default components: [`PendingAction`]
-#[derive(Component, Default)]
-pub struct Actor;
+#[derive(Component)]
+pub struct Actor {
+    pub delay_mult: u64
+}
+
+impl Actor {
+    
+    /// Displays `self.delay` as divided by 100, with two decimal points, without using floats.
+    /// 
+    /// This is speficially to format it for presentation in the top-right-ui.
+    /// 
+    /// Examples: 0 = "0.00", 175 = "1.75"
+    pub fn to_decimal_string(&self) -> String {
+        let delay = Action::Wait.to_delay_with_multiplier(self.delay_mult);
+
+        let s = delay.to_string();
+        // Possible Bug? ; Could this possibly return more or less 
+        let len = s.len();
+
+        return if len == 1 {
+            format!("0.0{}", s)
+        } else if len == 2 {
+            format!("0.{}", s) 
+        } else {
+            format!("{}.{}", &s[..len-2], &s[len-2..])
+        }
+    }
+}
 
 /// Marker [`Component`] for enemy actor entities.
 /// 
 /// automatically adds default components: [`Actor`]
 #[derive(Component)]
-#[require(Actor)]
+#[require(SelectedAction)]
 pub struct EnemyActor;
+
+#[derive(Component, Default, Deref, DerefMut)]
+pub struct SelectedAction(pub Option<Action>);
+
+
+#[derive(Deref, DerefMut, Resource)]
+pub struct PlayerSelectedAction(pub Option<Action>);
+
 
 /// Marker [`Component`] for the player's character.
 /// 
 /// automatically adds default components: [`Actor`], [`Position`]
 #[derive(Component)]
-#[require(Actor, Position)]
+#[require(Position)]
 pub struct PlayerActor;
 
 /// [`Component`] for the player character Entity, defining the player's visibility radius.

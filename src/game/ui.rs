@@ -1,5 +1,5 @@
 use bevy::{ecs::{component::Component, query::With, resource::Resource, system::{Commands, Res, Single}}, ui::{Node, PositionType, px, widget::Text}, utils::default};
-use crate::game::{actors::{CharacterBackground, PlayerActor, combat::Health}, scheduler::{Clock, Timing}};
+use crate::game::{actors::{Actor, CharacterBackground, PlayerActor, combat::Health}, scheduler::Clock};
 
 /// Resource keeping track of whether any dynamic data displayed by the Ui has been changed. 
 /// It determines the result of the run condition that is applied to the Ui Update systems. 
@@ -12,7 +12,7 @@ pub struct UiNeedsUpdate(pub bool);
 /// System that spawns one top-right, and one top left ui bundle, and initializes the [`UiNeedsUpdate`] resource.
 pub fn init_game_ui(
     mut commands: Commands,
-    player_data: Single<(&CharacterBackground, &Health, &Timing), With<PlayerActor>>
+    player_data: Single<(&CharacterBackground, &Health, &Actor), With<PlayerActor>>
 ) {
     commands.spawn((
         Node {
@@ -55,11 +55,11 @@ pub struct TopLeftUi;
 /// 
 /// Should run on schedule `Update` while in game, and come with a run condition where [`UiNeedsUpdate`].0 == true. 
 pub fn update_topleft_ui(
-    player_data: Single<(&Health, &Timing), With<PlayerActor>>,
+    player_data: Single<(&Health, &Actor), With<PlayerActor>>,
     mut topleft_ui: Single<&mut Text, With<TopRightUi>>,
 ) {
     topleft_ui.0 = format!(
-            "health: {}\ndelay mult: {}", player_data.0.to_string(), player_data.1.to_decimal_string(), 
+        "health: {}\ndelay mult: {}", player_data.0.to_string(), player_data.1.to_decimal_string(), 
     );
 }
 

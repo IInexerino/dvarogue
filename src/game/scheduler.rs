@@ -1,7 +1,7 @@
 use std::{cmp::Ordering, collections::BinaryHeap};
-use bevy::{ecs::{component::Component, entity::{ContainsEntity, Entity}, query::With, resource::Resource, system::{Commands, Single}}, prelude::{Deref, DerefMut}, state::state::{NextState, States}};
+use bevy::{ecs::{entity::{ContainsEntity, Entity}, query::With, resource::Resource, system::{Commands, Res, ResMut, Single}}, input::{ButtonInput, keyboard::KeyCode}, prelude::{Deref, DerefMut}, state::state::NextState};
 
-use crate::game::actors::{PlayerActor, actions::Action};
+use crate::{TurnState, game::actors::{PlayerActor, actions::Action}};
 
 /// Creates a new default [`Clock`], [`Scheduler`] resource, or resets an existing one to default.
 pub fn reset_clock(mut commands: Commands) {
@@ -18,7 +18,27 @@ pub fn reset_scheduler(mut commands: Commands, player_ent: Single<Entity, With<P
     });
 }
 
-pub fn action_selection() {}
+pub fn cycle_actions(
+    mut scheduler: ResMut<Scheduler>,
+    mut turn_state: ResMut<NextState<TurnState>>,
+    mut clock: ResMut<Clock>,
+) {
+    let actor = scheduler.queue.pop()
+        .expect("Actor queue should never be empty. There should always be one player on each rerun, and it should terminate when player is selected");
+
+    clock.0 = actor.next_tick;
+
+    // if the actor is a player, go to choose player actions
+    if actor.priority == 3 { 
+        turn_state.set(TurnState::AwaitingPlayerInput);
+        return
+    }
+
+    // run the behavooural ai of whatever actor there is
+
+    turn_state.set(TurnState::PerformingActions);
+}
+
 
 /// Total turn counter that runs from the start to the end of a game.
 /// 
@@ -53,48 +73,6 @@ impl Clock {
 /// as well as the `Clock` time at which its next action is to be taken.
 /// 
 /// `self.next_action_tick` must be updated every time its the entity's turn, and it has completed any action.
-#[derive(Component)]
-pub struct Timing {
-    pub next_action_tick: u64,
-    /// Percentage (100 = 100%)
-    pub delay_multiplier: u64,
-}
-
-impl Timing {
-
-    pub fn action_delay_with_multiplier(&self, action: &Action) -> u64 {
-        (action.to_delay() * self.delay_multiplier) / 100
-    }
-
-    /// Displays `self.delay` as divided by 100, with two decimal points, without using floats.
-    /// 
-    /// This is speficially to format it for presentation in the top-right-ui.
-    /// 
-    /// Examples: 0 = "0.00", 175 = "1.75"
-    pub fn to_decimal_string(&self) -> String {
-        let delay = self.action_delay_with_multiplier(&Action::Wait);
-
-        let s = delay.to_string();
-        // Possible Bug? ; Could this possibly return more or less 
-        let len = s.len();
-
-        return if len == 1 {
-            format!("0.0{}", s)
-        } else if len == 2 {
-            format!("0.{}", s) 
-        } else {
-            format!("{}.{}", &s[..len-2], &s[len-2..])
-        }
-    }
-
-    /// Reschedules the next action time in `self.next_action_tick`. 
-    /// 
-    /// Needs to be used any time its an [`Actor`]'s action is completed
-    pub fn action_done(&mut self, action: &Action) {
-        let delay = self.action_delay_with_multiplier(action);
-        self.next_action_tick += delay
-    }
-}
 
 
 #[derive(Resource)]
