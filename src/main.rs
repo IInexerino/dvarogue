@@ -48,7 +48,7 @@ fn main() {
             (
                 update_topright_ui,
                 update_topleft_ui,
-            ).run_if(resource_exists_and_equals(UiNeedsUpdate(true))),
+            ),
             (
                 update_game_input,
                 (

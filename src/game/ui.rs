@@ -56,10 +56,15 @@ pub struct TopLeftUi;
 /// Should run on schedule `Update` while in game, and come with a run condition where [`UiNeedsUpdate`].0 == true. 
 pub fn update_topleft_ui(
     player_data: Single<(&Health, &Actor), With<PlayerActor>>,
-    mut topleft_ui: Single<&mut Text, With<TopRightUi>>,
+    mut topleft_ui: Single<&mut Text, With<TopLeftUi>>,
 ) {
+    let char_bcg = topleft_ui.0.lines().next().unwrap();
+
     topleft_ui.0 = format!(
-        "health: {}\ndelay mult: {}", player_data.0.to_string(), player_data.1.to_decimal_string(), 
+        "{}\nhealth: {}\ndelay*: {}", 
+            char_bcg,
+            player_data.0.to_string(),
+            player_data.1.to_decimal_string(), 
     );
 }
 
