@@ -14,7 +14,7 @@ pub fn setup_first_map(
     let mapsize = map.size.clone();
 
     commands.insert_resource(DiscoveredFloors(
-        HashMap::from([(first_floor.clone(), (map, SpatialMap::new_empty(&mapsize)))])
+        HashMap::from([(first_floor.clone(), (map, SpatialMap::new()))])
     ));
     commands.insert_resource(CurrentFloor(first_floor));
 }

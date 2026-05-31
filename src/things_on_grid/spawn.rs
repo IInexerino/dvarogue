@@ -33,8 +33,7 @@ pub fn spawn_starting_player(
         )
     ).id();
 
-
-    spatial_map.entities.get_mut(&pos).expect("Error: Coords not present in SpatialMap").push(player_entity);
+    spatial_map.push_to_position(pos, player_entity);
 
     commands.remove_resource::<CharacterConfigs>();
     commands.init_resource::<GameInput>();

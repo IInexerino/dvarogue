@@ -30,10 +30,7 @@ pub fn execute_actions(
 
                     match dest_tile_collision {
                         CollisionKind::None => {
-                            spatial_map.entities.get_mut(&current_pos).expect("Error: Position coords not present in SpatialMap").retain(
-                                |&a | a != entity
-                            );
-                            spatial_map.entities.get_mut(&dest_pos).expect("Error: Position coords not present in SpatialMap").push(entity);  
+                            spatial_map.move_entity(&current_pos, dest_pos, entity).unwrap();
 
                             if dest_tile_kind == &TileKind::Door(false) {
                                 map.set_tile(&dest_pos, TileKind::Door(true)).unwrap();
