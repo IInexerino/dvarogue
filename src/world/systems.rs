@@ -1,7 +1,5 @@
 use std::collections::HashMap;
-
 use bevy::{asset::AssetServer, ecs::system::{Commands, Res}, transform::components::Transform};
-
 use crate::world::{floor::{CurrentFloor, DiscoveredFloors, DungeonFloor, DungeonKind}, map::{grid::Map, spatial::SpatialMap, tile::TilePos}};
 
 
@@ -9,9 +7,7 @@ pub fn setup_first_map(
     mut commands: Commands
 ) {
     let first_floor = DungeonFloor::first_floor(DungeonKind::Dungeon);
-
     let map = Map::new_from_dungeon_floor(&first_floor).unwrap();
-    let mapsize = map.size.clone();
 
     commands.insert_resource(DiscoveredFloors(
         HashMap::from([(first_floor.clone(), (map, SpatialMap::new()))])
