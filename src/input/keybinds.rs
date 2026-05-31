@@ -1,9 +1,10 @@
 use std::collections::HashSet;
 
-use bevy::{ecs::{resource::Resource, system::{Res, ResMut}}, input::{ButtonInput, keyboard::KeyCode}, math::IVec2, state::state::NextState};
+use bevy::{ecs::{resource::Resource, system::{Res, ResMut}}, input::{ButtonInput, keyboard::KeyCode}};
 use serde::{Deserialize, Serialize};
 
-use crate::{TurnState, game::{actors::{PlayerSelectedAction, actions::Action}, map::procedural_gen::Dir}};
+use crate::input::Dir;
+
 
 const CHAR_KEY_MAP: [(char, KeyCode); 38] = [
     ('z', KeyCode::KeyZ),
@@ -90,7 +91,7 @@ impl InputBinding {
     }
         
     pub fn kb_char_to_key(&self) -> KeyCode {
-        CHAR_KEY_MAP.iter().find(| (s, v)| s == &self.binding).expect("Error: character does not have a KeyCode mapping").1
+        CHAR_KEY_MAP.iter().find(| (s, _ )| s == &self.binding).expect("Error: character does not have a KeyCode mapping").1
     }
 }
 
@@ -158,33 +159,4 @@ pub fn update_game_input(
             game_input.just_released.insert(action);
         }
     }
-}
-
-pub fn register_player_input(
-    game_inputs: Res<GameInput>,
-    mut queued_player_action: ResMut<PlayerSelectedAction>,
-    mut turn_state: ResMut<NextState<TurnState>>
-) {
-    let inputs = game_inputs.get_just_pressed();
-
-    let mut movement = IVec2::new(0, 0);
-
-    for input_kind in inputs {
-
-        if let InputKind::Move(dir) = input_kind {
-            match dir {
-                Dir::N => movement.y += 1,
-                Dir::S => movement.y -= 1,
-                Dir::E => movement.x += 1,
-                Dir::W => movement.x -= 1,
-            }
-        }
-    }
-
-    if movement != IVec2::new(0, 0) {
-        queued_player_action.0 = Some(Action::Move(movement));
-        turn_state.set(TurnState::PerformingActions);
-        return 
-    }
-
 }

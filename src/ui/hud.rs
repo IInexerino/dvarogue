@@ -1,18 +1,14 @@
-use bevy::{ecs::{component::Component, query::With, resource::Resource, system::{Commands, Res, Single}}, ui::{Node, PositionType, px, widget::Text}, utils::default};
-use crate::game::{actors::{Actor, CharacterBackground, PlayerActor, combat::Health}, scheduler::Clock};
-
-/// Resource keeping track of whether any dynamic data displayed by the Ui has been changed. 
-/// It determines the result of the run condition that is applied to the Ui Update systems. 
-/// This avoids updating the Ui on every frame.
-#[derive(Resource, Default, PartialEq)]
-pub struct UiNeedsUpdate(pub bool);
 
 // ----- Ui Initialization ----- 
+
+use bevy::{ecs::{component::Component, query::With, system::{Commands, Res, Single}}, ui::{Node, PositionType, px, widget::Text}, utils::default};
+
+use crate::{menu::character_select::CharacterBackground, things_on_grid::components::{Health, PendingAction, PlayerActor}, turn::clock::Clock};
 
 /// System that spawns one top-right, and one top left ui bundle, and initializes the [`UiNeedsUpdate`] resource.
 pub fn init_game_ui(
     mut commands: Commands,
-    player_data: Single<(&CharacterBackground, &Health, &Actor), With<PlayerActor>>
+    player_data: Single<(&CharacterBackground, &Health, &PendingAction), With<PlayerActor>>
 ) {
     commands.spawn((
         Node {
@@ -40,8 +36,6 @@ pub fn init_game_ui(
         Text::new("Clock: 0.0"),
         TopRightUi,
     ));
-
-    commands.init_resource::<UiNeedsUpdate>();
 }
 
 
@@ -55,7 +49,7 @@ pub struct TopLeftUi;
 /// 
 /// Should run on schedule `Update` while in game, and come with a run condition where [`UiNeedsUpdate`].0 == true. 
 pub fn update_topleft_ui(
-    player_data: Single<(&Health, &Actor), With<PlayerActor>>,
+    player_data: Single<(&Health, &PendingAction), With<PlayerActor>>,
     mut topleft_ui: Single<&mut Text, With<TopLeftUi>>,
 ) {
     let char_bcg = topleft_ui.0.lines().next().unwrap();

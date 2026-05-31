@@ -1,8 +1,10 @@
 use std::{collections::{HashMap, HashSet}, fmt::Display};
+
 use bevy::math::IVec2;
 use rand::{random_range, seq::{IndexedRandom, IteratorRandom}};
-use serde::{Deserialize, Serialize};
-use crate::game::map::{Map, TileKind};
+
+use crate::{input::Dir, world::map::{grid::Map, tile::TileKind}};
+
 
 const MIN_ROOM_WIDTH:i32 = 3;
 const MAX_ROOM_WIDTH:i32 = 13;
@@ -372,28 +374,18 @@ impl Display for Map {
     }
 }
 
-#[derive(Clone, Copy, PartialEq, Serialize, Deserialize, Eq, Hash)]
-pub enum Dir {
-    N,
-    S,
-    E,
-    W
-}
 
 #[cfg(test)]
 mod tests {
-
-    use serde::Serialize;
-
-use crate::KeybindRegister;
+    use crate::world::floor::{DungeonFloor, DungeonKind};
 
 use super::*;
 
     #[test]
     fn creteg_and_print_map() {
-        let map = Map::new_from_dungeon_floor(
-            &crate::game::map::DungeonFloor::first_floor(crate::game::map::DungeonKind::Dungeon)
-        ).unwrap();
+        let floor = DungeonFloor::first_floor(DungeonKind::Dungeon);
+
+        let map = Map::new_from_dungeon_floor(&floor).unwrap();
         print!("{map}");
     }
 
