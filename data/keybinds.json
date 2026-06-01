@@ -1,1 +1,0 @@
-[{"input_kind":{"Move":"N"},"binding":"↑"},{"input_kind":{"Move":"E"},"binding":"→"},{"input_kind":{"Move":"S"},"binding":"↓"},{"input_kind":{"Move":"W"},"binding":"←"},{"input_kind":"ToggleZoom","binding":"z"}]

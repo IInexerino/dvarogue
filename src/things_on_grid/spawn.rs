@@ -28,7 +28,7 @@ pub fn spawn_starting_player(
             pos, 
             character_configs.health, 
             character_configs.vision_radius,
-            character_configs.background.clone(),
+            character_configs.background,
             Sprite::from_image(asset_server.load(&character_configs.sprite)),
         )
     ).id();

@@ -1,0 +1,24 @@
+{
+    "dvarogue::input::keybinds::KeybindRegister": ([
+        (
+            input_kind: Move(E),
+            binding: ArrowRight,
+        ),
+        (
+            input_kind: Move(W),
+            binding: ArrowLeft,
+        ),
+        (
+            input_kind: Move(N),
+            binding: ArrowUp,
+        ),
+        (
+            input_kind: ToggleZoom,
+            binding: KeyZ,
+        ),
+        (
+            input_kind: Move(S),
+            binding: ArrowDown,
+        ),
+    ]),
+}

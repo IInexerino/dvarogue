@@ -10,7 +10,7 @@ use crate::things_on_grid::components::Health;
 /// to be done: 
 ///     - inclusion of diverse classes, making a prior struct that will contain this enum, 
 ///     and the class choice, From will be implemented for that type instead
-#[derive(Component, Clone)]
+#[derive(Component, Clone, Copy)]
 pub enum CharacterBackground {
     GreyOrb,
     Mamut,

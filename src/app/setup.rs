@@ -1,5 +1,7 @@
-use bevy::{camera::{Camera2d, OrthographicProjection, Projection, ScalingMode}, ecs::system::Commands};
+use bevy::{camera::{Camera2d, OrthographicProjection, Projection, ScalingMode}, ecs::system::Commands, reflect::{FromReflect, TypeRegistry, serde::{ReflectDeserializer, ReflectSerializer}}};
+use ron::ser::PrettyConfig;
 use crate::input::keybinds::KeybindRegister;
+use serde_core::de::DeserializeSeed;
 
 
 pub fn setup(mut commands: Commands) {
@@ -15,16 +17,27 @@ pub fn setup(mut commands: Commands) {
 
     // setting up default keybinds or loading them from prev. 
 
+    let mut type_registry = TypeRegistry::default(); 
+    type_registry.register::<KeybindRegister>();
     // first time entering the game. sets up all data files that can be set to default 
-    if !std::path::Path::new("data").exists() {
+    let data_folder_path = std::path::Path::new("data");
+    if !data_folder_path.exists() {
         std::fs::create_dir("data").unwrap();
+        
+        let input = KeybindRegister::default();
+        let reflect_serializer = ReflectSerializer::new(&input, &type_registry);
+        let default_keybinds_string = ron::ser::to_string_pretty(&reflect_serializer, PrettyConfig::new()).unwrap();
 
-        let default_keybinds_string = serde_json::to_string(&KeybindRegister::default()).unwrap();
-        std::fs::write("data/keybinds.json", default_keybinds_string).unwrap();
+        std::fs::write("data/keybinds.ron", default_keybinds_string).unwrap();
     }
 
-    let keybinds_string = std::fs::read_to_string("data/keybinds.json").unwrap();
-    let keybinds: KeybindRegister = serde_json::from_str(&keybinds_string).unwrap();
-    commands.insert_resource(keybinds);
+    let keybinds_string = std::fs::read_to_string("data/keybinds.ron").unwrap();
+    let reflect_deserializer = ReflectDeserializer::new(&type_registry);
+    let deserialized_value = reflect_deserializer.deserialize(
+    &mut ron::Deserializer::from_str(&keybinds_string).unwrap()
+    ).unwrap();
+    
+let keybinds = <KeybindRegister as FromReflect>::from_reflect(&*deserialized_value).unwrap();
+commands.insert_resource(keybinds);
 
 }

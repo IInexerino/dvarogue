@@ -257,7 +257,7 @@ impl Map {
         for y in 2..self.size.height - 2 {
             for x in 2..self.size.width - 2 {
                 let pos = IVec2::new(x, y);
-                let tile_kind = self.get_tile(&pos).unwrap().kind.clone();
+                let tile_kind = self.get_tile(&pos).unwrap().kind;
 
                 if tile_kind == TileKind::Floor || tile_kind == TileKind::WallBedrock { 
                     continue 
@@ -283,23 +283,23 @@ impl Map {
         }
 
         while separate_regions_remaining > 1 {
-            let connector_pos = connector_regions.keys().choose(&mut rng)
-                .expect("Error: no connectors present while multiple open regions exist!").clone();
+            let connector_pos = *connector_regions.keys().choose(&mut rng)
+                .expect("Error: no connectors present while multiple open regions exist!");
 
             self.set_tile(&connector_pos, TileKind::Door(false)).unwrap();
 
             // separate regions into surviving and sources
             let mut connectors_regions = connector_regions[&connector_pos].iter();
-            let surviving_region = connectors_regions.next().unwrap().clone();
+            let surviving_region = *connectors_regions.next().unwrap();
             let sources = connectors_regions.cloned().collect::<HashSet<usize>>();
 
             for source in &sources {
                 // change the field of the source region to the surviving region's field
-                region_index[source.clone()] = surviving_region;
+                region_index[*source] = surviving_region;
                 // number of separate regions reduced
                 separate_regions_remaining -= 1;
             }
-
+            
             // now we will remove entries from connector_regions that no longer qualify as connectors
             // This happens when they no longer touch more than one region
             connector_regions.retain(|p, r| {
@@ -385,7 +385,7 @@ use super::*;
     fn creteg_and_print_map() {
         let floor = DungeonFloor::first_floor(DungeonKind::Dungeon);
 
-        let map = Map::new_from_dungeon_floor(&floor).unwrap();
+        let map = Map::new_from_dungeon_floor(floor).unwrap();
         print!("{map}");
     }
 

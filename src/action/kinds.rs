@@ -1,7 +1,6 @@
 use bevy::{ecs::entity::Entity, math::IVec2};
 
 
-#[derive(Clone)]
 pub enum Action {
     Move(IVec2),
     /// With attacked Entity id

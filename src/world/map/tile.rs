@@ -1,6 +1,6 @@
 use bevy::{asset::AssetServer, color::{Color, palettes::css::{BLACK, PINK}}, ecs::{component::Component, system::Res}, math::IVec2, sprite::Sprite};
 
-#[derive(Clone, PartialEq)]
+#[derive(Clone, Copy, PartialEq)]
 pub enum TileKind {
     Floor,
     WallBedrock,

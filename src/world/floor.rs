@@ -2,14 +2,14 @@ use std::collections::HashMap;
 use bevy::{ecs::resource::Resource, prelude::{Deref, DerefMut}};
 use crate::world::map::{grid::Map, spatial::SpatialMap};
 
-#[derive(Debug, PartialEq, Eq, Hash, Clone)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum DungeonKind {
     Dungeon,
     Caves,
 }
 
 /// Specifies a dungeon kind and a specific floor
-#[derive(Debug, Eq, PartialEq, Hash, Clone)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq, Hash)]
 pub struct DungeonFloor {
     pub kind: DungeonKind,
     pub floor: u8

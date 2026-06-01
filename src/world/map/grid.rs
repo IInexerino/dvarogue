@@ -35,17 +35,17 @@ impl Map {
     }
 
     /// The function actually configuring a floor from configs. Dungeon procgen occurs here.
-    pub fn new_from_dungeon_floor(floor: &DungeonFloor) -> Result<Self, MapError> {
+    pub fn new_from_dungeon_floor(floor: DungeonFloor) -> Result<Self, MapError> {
         let size = match floor.kind {
             DungeonKind::Dungeon => {
                 match floor.floor {
                     1..=2 => MapSize::new(49, 75),
                     3..=5 => MapSize::new(59, 99),
                     6..=10 => MapSize::new(39, 59),
-                    _ => return Err(MapError::InvalidFloorSpecification(floor.clone()))
+                    _ => return Err(MapError::InvalidFloorSpecification(floor))
                 }
             },
-            _ => return Err(MapError::InvalidFloorSpecification(floor.clone())),
+            _ => return Err(MapError::InvalidFloorSpecification(floor)),
         };
 
         let mut map = Map::new_filled(size);

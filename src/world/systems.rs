@@ -7,10 +7,10 @@ pub fn setup_first_map(
     mut commands: Commands
 ) {
     let first_floor = DungeonFloor::first_floor(DungeonKind::Dungeon);
-    let map = Map::new_from_dungeon_floor(&first_floor).unwrap();
+    let map = Map::new_from_dungeon_floor(first_floor).unwrap();
 
     commands.insert_resource(DiscoveredFloors(
-        HashMap::from([(first_floor.clone(), (map, SpatialMap::new()))])
+        HashMap::from([(first_floor, (map, SpatialMap::new()))])
     ));
     commands.insert_resource(CurrentFloor(first_floor));
 }
