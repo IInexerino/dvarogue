@@ -1,7 +1,7 @@
 use std::fmt::Display;
-use bevy::{ecs::{bundle::Bundle, component::Component}, math::IVec2, prelude::{Deref, DerefMut}, sprite::Sprite};
+use bevy::{ecs::{bundle::Bundle, component::Component}, math::IVec2, prelude::{Deref, DerefMut}, sprite::Sprite, transform::components::Transform};
 
-use crate::{action::kinds::Action, menu::character_select::CharacterBackground};
+use crate::{action::kinds::Action, menu::character_select::CharacterBackground, world::map::grid::grid_to_world_transform};
 
 
 /// Marker [`Component`] for enemy actor entities.
@@ -49,12 +49,13 @@ pub struct PlayerActorBundle {
     pub health: Health,
     pub vision: Vision,
     pub background: CharacterBackground,
-    pub sprite: Sprite
+    pub sprite: Sprite,
+    pub transform: Transform
 
 }
 
 impl PlayerActorBundle {
-    pub fn new(delay_mult: u64, pos: IVec2, health: Health, vision_radius: u8, background: CharacterBackground, sprite: Sprite) -> Self {
+    pub fn new(delay_mult: u64, pos: IVec2, health: Health, vision_radius: u8, background: CharacterBackground, sprite: Sprite,) -> Self {
         PlayerActorBundle {
             player_actor: PlayerActor,
             actor: Actor,
@@ -64,6 +65,7 @@ impl PlayerActorBundle {
             vision: Vision{ radius: vision_radius},
             background,
             sprite,
+            transform: Transform::from_translation(grid_to_world_transform(pos, 1.0))
 
         }
     }

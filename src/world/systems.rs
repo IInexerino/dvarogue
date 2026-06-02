@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 use bevy::{asset::AssetServer, ecs::system::{Commands, Res}, transform::components::Transform};
-use crate::world::{floor::{CurrentFloor, DiscoveredFloors, DungeonFloor, DungeonKind}, map::{grid::Map, spatial::SpatialMap, tile::TilePos}};
+use crate::world::{floor::{CurrentFloor, DiscoveredFloors, DungeonFloor, DungeonKind}, map::{grid::{Map, grid_to_world_transform}, spatial::SpatialMap, tile::TilePos}};
 
 
 pub fn setup_first_map(
@@ -25,11 +25,7 @@ pub fn render_current_map(
 
     for (idx, tile) in map.tiles.iter().enumerate() {
         let coords = map.idx_to_coords(idx);
-        let transform = Transform::from_xyz(
-            ((coords.x * 32) - (((map.size.width+1) * 32) / 2)) as f32   , 
-            ((coords.y * 32) - (((map.size.height+1) * 32)) / 2) as f32 , 
-            -1.
-        ); 
+        let transform = Transform::from_translation(grid_to_world_transform(coords, 0.0)); 
 
         let sprite = tile.kind.to_sprite(&asset_server);
 

@@ -1,4 +1,4 @@
-use bevy::math::IVec2;
+use bevy::math::{IVec2, Vec3};
 
 use crate::world::{MapError, floor::{DungeonFloor, DungeonKind}, map::tile::{Tile, TileKind}};
 
@@ -88,6 +88,14 @@ impl Map {
         return 
             if idx >= self.size.count() { Err(MapError::OutOfBoundsTileIdx(idx)) }
             else { self.tiles[idx] = Tile::from(kind); Ok(()) }
+    }
+}
+
+pub fn grid_to_world_transform(coords: IVec2, z: f32) -> Vec3 {
+    Vec3 {
+        x: (coords.x * 32) as f32,
+        y: (coords.y * 32) as f32,
+        z,
     }
 }
 
