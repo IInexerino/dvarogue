@@ -1,6 +1,6 @@
 use bevy::{ecs::{query::With, system::{Res, ResMut, Single}}, math::IVec2, state::state::NextState};
 
-use crate::{action::kinds::Action, app::states::TurnState, input::{Dir, keybinds::{GameInput, InputKind}}, things_on_grid::components::{PendingAction, PlayerActor}};
+use crate::{action::kinds::Action, app::states::TurnState, input::{Dir, centralization::{GameInput, InputKind}}, things_on_grid::components::{PendingAction, PlayerActor}};
 
 
 pub fn register_player_input(

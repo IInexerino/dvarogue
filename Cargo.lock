@@ -2277,6 +2277,7 @@ dependencies = [
  "bevy",
  "rand 0.10.1",
  "ron",
+ "serde",
  "serde_core",
  "thiserror 1.0.69",
 ]

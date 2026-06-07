@@ -26,8 +26,3 @@ impl Clock {
         }
     }
 }
-
-/// Creates a new default [`Clock`], [`Scheduler`] resource, or resets an existing one to default.
-pub fn reset_clock(mut commands: Commands) {
-    commands.insert_resource(Clock::default());
-}

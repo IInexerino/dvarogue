@@ -1,42 +1,5 @@
-
-// ----- Ui Initialization ----- 
-
-use bevy::{ecs::{component::Component, query::With, system::{Commands, Res, Single}}, ui::{Node, PositionType, px, widget::Text}, utils::default};
-
-use crate::{menu::character_select::CharacterBackground, things_on_grid::components::{Health, PendingAction, PlayerActor}, turn::clock::Clock};
-
-/// System that spawns one top-right, and one top left ui bundle, and initializes the [`UiNeedsUpdate`] resource.
-pub fn init_game_ui(
-    mut commands: Commands,
-    player_data: Single<(&CharacterBackground, &Health, &PendingAction), With<PlayerActor>>
-) {
-    commands.spawn((
-        Node {
-            position_type: PositionType::Absolute,
-            top: px(12),
-            left: px(12),
-            ..default()
-        },
-        Text::new(format!(
-            "{}\nhealth: {}\ndelay*: {}", 
-                player_data.0.to_string(),
-                player_data.1.to_string(), 
-                player_data.2.to_decimal_string(), 
-        )),
-        TopLeftUi,
-    ));
-
-    commands.spawn((
-        Node {
-            position_type: PositionType::Absolute,
-            top: px(12),
-            right: px(12),
-            ..default()
-        },
-        Text::new("Clock: 0.0"),
-        TopRightUi,
-    ));
-}
+use bevy::{ecs::{component::Component, query::With, system::{ Res, Single}}, ui::widget::Text};
+use crate::{things_on_grid::components::{Health, PendingAction, PlayerActor}, turn::clock::Clock};
 
 
 // ----- Topleft Ui -----

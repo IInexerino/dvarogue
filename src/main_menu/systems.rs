@@ -1,11 +1,11 @@
 use bevy::{ecs::system::{Res, ResMut}, input::{ButtonInput, keyboard::KeyCode}, state::state::NextState};
-use crate::app::states::GameState;
+use crate::app::states::{FloorState, MainMenuState};
 
 pub fn enter_game(
     keys: Res<ButtonInput<KeyCode>>,
-    mut next_state: ResMut<NextState<GameState>>,
+    mut main_menu_state: ResMut<NextState<MainMenuState>>,
 ) {
     if keys.just_pressed(KeyCode::Space) {
-        next_state.set(GameState::InLevel);
+        main_menu_state.set(MainMenuState::InGame);
     }
 }

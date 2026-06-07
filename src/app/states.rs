@@ -1,15 +1,22 @@
 use bevy::state::state::{States, SubStates, StateSet};
 
 #[derive(States, Default, Debug, Clone, PartialEq, Eq, Hash)]
-pub enum GameState {
+pub enum MainMenuState {
     #[default]
     InMainMenu,
-    InLevel,
-    BetweenLevels,
+    InGame
+}
+
+#[derive(States, Default, Debug, Clone, PartialEq, Eq, Hash)]
+pub enum FloorState {
+    #[default]
+    None,
+    InFloor,
+    BetweenFloors
 }
 
 #[derive(SubStates, Clone, PartialEq, Eq, Hash, Debug, Default)]
-#[source(GameState = GameState::InLevel)]
+#[source(FloorState = FloorState::InFloor)]
 pub enum TurnState {
     #[default]
     CyclingActors,
@@ -19,9 +26,9 @@ pub enum TurnState {
 }
 
 #[derive(SubStates, Clone, PartialEq, Eq, Hash, Debug, Default)]
-#[source(GameState = GameState::InLevel)]
-pub enum InPlayerMenu {
+#[source(MainMenuState = MainMenuState::InGame)]
+pub enum IngameMenuState {
     #[default]
-    InGame,
-    InMenu,
+    None,
+    Settings,
 }

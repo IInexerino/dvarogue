@@ -1,0 +1,8 @@
+(
+    language: English,
+    window: (
+        window_resolution: R1280x720,
+        fullscreen: Windowed,
+        monitor_selection: None,
+    ),
+)

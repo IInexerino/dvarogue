@@ -1,4 +1,4 @@
-use bevy::{asset::AssetServer, color::{Color, palettes::css::{BLACK, PINK}}, ecs::{component::Component, system::Res}, math::IVec2, sprite::Sprite};
+use bevy::{asset::Handle, color::{Color, palettes::css::{BLACK, PINK}}, ecs::component::Component, image::{Image, TextureAtlas, TextureAtlasLayout}, math::IVec2, sprite::Sprite};
 
 #[derive(Clone, Copy, PartialEq)]
 pub enum TileKind {
@@ -15,21 +15,21 @@ pub enum TileKind {
 }
 
 impl TileKind {
-    pub fn to_sprite(&self, asset_server: &Res<AssetServer>) -> Option<Sprite> {
+    pub fn to_sprite(&self, image: Handle<Image>, layout: Handle<TextureAtlasLayout>) -> Option<Sprite> {
         match self {
-            TileKind::Floor => Some(Sprite::from_image(asset_server.load("purple_floor.png"))),
+            TileKind::Floor => Some(Sprite::from_atlas_image(image, TextureAtlas { layout, index: 1 })),
             TileKind::WallBedrock => {
-                let mut sprite = Sprite::from_image(asset_server.load("wallrock.png")); 
+                let mut sprite = Sprite::from_atlas_image(image, TextureAtlas { layout, index: 0 }); 
                 sprite.color = Color::Srgba(BLACK);
                 Some(sprite)
             } 
-            TileKind::WallRock => Some(Sprite::from_image(asset_server.load("wallrock.png"))),
+            TileKind::WallRock => Some(Sprite::from_atlas_image(image, TextureAtlas { layout, index: 0 })),
             TileKind::Door(false) => {
-                let mut sprite = Sprite::from_image(asset_server.load("wallrock.png"));
+                let mut sprite = Sprite::from_atlas_image(image, TextureAtlas { layout, index: 0 });
                 sprite.color = Color::Srgba(PINK);
                 Some(sprite)
             },
-            TileKind::Door(true) => Some(Sprite::from_image(asset_server.load("purple_floor.png"))),
+            TileKind::Door(true) => Some(Sprite::from_atlas_image(image, TextureAtlas { layout, index: 1 })),
 
             _ => None
         }

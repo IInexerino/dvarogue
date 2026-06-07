@@ -1,5 +1,5 @@
 {
-    "dvarogue::input::keybinds::KeybindRegister": ([
+    "dvarogue::settings::keybinds::SettingsKeybindRegister": ([
         (
             input_kind: Move(E),
             binding: ArrowRight,

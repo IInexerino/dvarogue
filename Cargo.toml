@@ -7,7 +7,8 @@ edition = "2024"
 bevy = { version = "0.18.1", features = ["dynamic_linking", "debug"] }
 rand = "=0.10.1"
 ron = "0.12.1"
-serde_core = "1.0.228"
+serde = "1.0.0"
+serde_core = "1.0.0"
 thiserror = { version = "1.0" }
 
 [profile.dev]

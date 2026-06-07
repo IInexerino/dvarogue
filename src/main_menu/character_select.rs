@@ -58,17 +58,17 @@ pub struct CharacterConfigs {
     pub starting_delay_mult: u64,
     pub vision_radius: u8,
     pub background: CharacterBackground,
-    pub sprite: String
+    pub sprite_idx: usize
 }
 
 impl CharacterConfigs {
-    fn new(max_hp: i32, starting_delay_mult: u64, vision_radius: u8, background: CharacterBackground, sprite: String) -> Self {
+    fn new(max_hp: i32, starting_delay_mult: u64, vision_radius: u8, background: CharacterBackground, sprite_idx: usize) -> Self {
         Self {
             health: Health { hp: max_hp, max_hp },
             starting_delay_mult,
             vision_radius,
             background,
-            sprite
+            sprite_idx,
         }
     }
 }
@@ -78,13 +78,13 @@ impl From<CharacterBackground> for CharacterConfigs {
     fn from(value: CharacterBackground) -> Self {
         match value {
             CharacterBackground::GreyOrb => {
-                CharacterConfigs::new(10, 100, 8, value, "grey_orb.png".to_string())
+                CharacterConfigs::new(10, 100, 8, value, 3)
             },
             CharacterBackground::Mamut => {
-                CharacterConfigs::new(8, 120, 8, value, "mamut.png".to_string())
+                CharacterConfigs::new(8, 120, 8, value, 4)
             },
             CharacterBackground::Furio => {
-                CharacterConfigs::new(12, 75, 8, value, "furio.png".to_string())
+                CharacterConfigs::new(12, 75, 8, value, 2)
             },
         }
     }

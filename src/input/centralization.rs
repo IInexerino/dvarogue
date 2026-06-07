@@ -1,34 +1,7 @@
-
 use bevy::{ecs::{resource::Resource, system::{Res, ResMut}}, input::{ButtonInput, keyboard::KeyCode}, platform::collections::HashSet, reflect::Reflect};
-use crate::input::Dir;
 
-#[derive(Resource, Reflect, PartialEq)]
-pub struct KeybindRegister(pub HashSet<InputBinding>);
+use crate::{input::Dir, settings::keybinds::SettingsKeybindRegister};
 
-impl Default for KeybindRegister {
-    fn default() -> Self {
-        KeybindRegister(HashSet::from([
-            InputBinding::new(InputKind::ToggleZoom, KeyCode::KeyZ),
-            InputBinding::new(InputKind::Move(Dir::W), KeyCode::ArrowLeft),
-            InputBinding::new(InputKind::Move(Dir::E), KeyCode::ArrowRight),
-            InputBinding::new(InputKind::Move(Dir::N), KeyCode::ArrowUp),
-            InputBinding::new(InputKind::Move(Dir::S), KeyCode::ArrowDown),
-        ]))
-    }
-}
-
-#[derive(Reflect, Eq, PartialEq, Hash)]
-#[reflect(PartialEq, Hash)]
-pub struct InputBinding {
-    input_kind: InputKind,
-    binding: KeyCode,
-}
-
-impl InputBinding {
-    pub fn new(input_kind: InputKind, binding: KeyCode) -> Self {
-        Self { input_kind, binding }
-    }
-}
 
 #[derive(Clone, Copy, Reflect, Eq, PartialEq, Hash)]
 #[reflect(PartialEq, Hash)]
@@ -72,7 +45,7 @@ impl GameInput {
 
 pub fn update_game_input(
     keyboard: Res<ButtonInput<KeyCode>>,
-    bindings: Res<KeybindRegister>,
+    bindings: Res<SettingsKeybindRegister>,
     mut game_input: ResMut<GameInput>,
 ) {
     game_input.pressed.clear();

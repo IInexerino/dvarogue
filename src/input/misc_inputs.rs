@@ -1,5 +1,5 @@
 use bevy::{camera::{Camera2d, Projection}, ecs::{query::With, system::{Res, Single}}};
-use crate::input::keybinds::{GameInput, InputKind};
+use crate::input::centralization::{GameInput, InputKind};
 
 
 pub fn toggle_zoom(

@@ -1,12 +1,13 @@
 mod app;
 
-mod menu;
+mod main_menu;
 mod input;
 mod things_on_grid;
 mod turn;
 mod world;
 mod ui;
 mod action;
+mod settings;
 
 use bevy::{DefaultPlugins, app::{App, PluginGroup}, image::ImagePlugin};
 use crate::app::plugins::GamePlugin;
