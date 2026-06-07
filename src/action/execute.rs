@@ -1,5 +1,5 @@
 use bevy::{camera::Camera2d, ecs::{entity::Entity, query::{Has, With, Without}, system::{Query, Res, ResMut, Single}}, state::state::NextState, transform::components::Transform};
-use crate::{action::kinds::Action, app::states::TurnState, things_on_grid::components::{PendingAction, PlayerActor, Position}, turn::{clock::Clock, scheduler::{ActorPriority, ScheduledActor, Scheduler}}, world::{floor::{CurrentFloor, DiscoveredFloors}, map::tile::{CollisionKind, TileKind}}};
+use crate::{action::kinds::Action, app::states::TurnState, things_on_grid::components::{PendingAction, PlayerActor, Position}, turn::{clock::Clock, scheduler::{ActorPriority, ScheduledActor, Scheduler}}, world::{floor::{CurrentFloor, DiscoveredFloors}, map::tile::{CollisionKind, TileKind}, systems::DirtyMaprenderMarker}};
 
 
 pub fn execute_actions(
@@ -11,6 +11,7 @@ pub fn execute_actions(
     clock: Res<Clock>,
     mut turn_state: ResMut<NextState<TurnState>>,
     mut scheduler: ResMut<Scheduler>,
+    mut render_marker: ResMut<DirtyMaprenderMarker>,
 ) {
     for (entity, pending_action) in actors_q {
         if let Some(action) = &pending_action.action {
@@ -34,6 +35,7 @@ pub fn execute_actions(
 
                             if dest_tile_kind == &TileKind::Door(false) {
                                 map.set_tile(&dest_pos, TileKind::Door(true)).unwrap();
+                                render_marker.0 = true;
                             }
 
                             let (delta_x, delta_y) = (

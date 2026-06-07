@@ -1,11 +1,15 @@
-use bevy::{ecs::system::{Commands, Res}, transform::components::Transform};
+use bevy::{ecs::{resource::Resource, system::{Commands, Res, ResMut}}, transform::components::Transform};
 use crate::{app::setup::SpriteSheet, world::{floor::{CurrentFloor, DiscoveredFloors}, map::{grid::grid_to_world_transform, tile::TilePos}}};
+
+#[derive(Resource, PartialEq)]
+pub struct DirtyMaprenderMarker(pub bool);
 
 pub fn render_current_map(
     mut commands: Commands,
     spritesheet: Res<SpriteSheet>,
     current_floor: Res<CurrentFloor>,
-    discovered_floors: Res<DiscoveredFloors>
+    discovered_floors: Res<DiscoveredFloors>,
+    mut render_marker: ResMut<DirtyMaprenderMarker>,
 ) {
     let (map, _ ) = &discovered_floors.0[&current_floor.0];
 
@@ -23,6 +27,8 @@ pub fn render_current_map(
             transform,
             sprite,
         ));
-
     }
+
+    render_marker.0 = false;
+
 }

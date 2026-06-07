@@ -1,6 +1,6 @@
-use bevy::{app::{Plugin, Startup, Update}, ecs::schedule::{IntoScheduleConfigs, common_conditions::{resource_exists, not}}, state::{app::AppExtStates, condition::in_state, state::OnEnter}};
+use bevy::{app::{Plugin, Startup, Update}, ecs::schedule::{IntoScheduleConfigs, common_conditions::{not, resource_exists, resource_exists_and_equals}}, state::{app::AppExtStates, condition::in_state, state::OnEnter}};
 
-use crate::{action::execute::execute_actions, app::{setup::{setup, setup_game}, states::{FloorState, IngameMenuState, MainMenuState, TurnState}}, input::{ centralization::update_game_input, misc_inputs::toggle_zoom, player_turn_input::register_player_input}, main_menu::{character_select::{CharacterConfigs, choose_character}, systems::enter_game}, turn::scheduler::{cycle_actions, reset_scheduler}, ui::hud::{ update_topleft_ui, update_topright_ui}, world::systems::render_current_map};
+use crate::{action::execute::execute_actions, app::{setup::{setup, setup_floor, setup_game}, states::{FloorState, IngameMenuState, MainMenuState, TurnState}}, input::{ centralization::update_game_input, misc_inputs::toggle_zoom, player_turn_input::register_player_input}, main_menu::{character_select::{CharacterConfigs, choose_character}, systems::enter_game}, turn::scheduler::cycle_actions, ui::hud::{ update_topleft_ui, update_topright_ui}, world::systems::{DirtyMaprenderMarker, render_current_map}};
 
 pub struct GamePlugin;
 
@@ -25,8 +25,7 @@ impl Plugin for GamePlugin {
         
         // new level startup systems
         .add_systems(OnEnter(FloorState::InFloor), (
-            reset_scheduler, 
-            render_current_map,
+            setup_floor, 
         ))
 
         .add_systems(Update,(
@@ -41,6 +40,7 @@ impl Plugin for GamePlugin {
                 (
                     update_topright_ui,
                     update_topleft_ui,
+                    render_current_map.run_if(resource_exists_and_equals(DirtyMaprenderMarker(true))),
                 ),
                 (
                     update_game_input,

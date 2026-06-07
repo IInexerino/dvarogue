@@ -1,8 +1,8 @@
-use std::collections::HashMap;
+use std::collections::{BinaryHeap, HashMap};
 
-use bevy::{asset::{AssetServer, Assets, Handle}, camera::{Camera2d, OrthographicProjection, Projection, ScalingMode}, ecs::{query::With, resource::Resource, system::{Commands, Res, ResMut, Single}}, image::{Image, TextureAtlas, TextureAtlasLayout}, math::{IVec2, UVec2}, render::view::Msaa, sprite::Sprite, state::state::NextState, transform::components::Transform, ui::{Node, PositionType, px, widget::Text}, utils::default};
+use bevy::{asset::{AssetServer, Assets, Handle}, camera::{Camera2d, OrthographicProjection, Projection, ScalingMode}, ecs::{entity::{ContainsEntity, Entity}, query::With, resource::Resource, system::{Commands, Res, ResMut, Single}}, image::{Image, TextureAtlas, TextureAtlasLayout}, math::{IVec2, UVec2}, render::view::Msaa, sprite::Sprite, state::state::NextState, transform::components::Transform, ui::{Node, PositionType, px, widget::Text}, utils::default};
 
-use crate::{app::states::FloorState, input::centralization::GameInput, main_menu::character_select::CharacterConfigs, settings::{game_settings::GameSettings, keybinds::SettingsKeybindRegister}, things_on_grid::components::{PendingAction, PlayerActorBundle}, turn::clock::Clock, ui::hud::{TopLeftUi, TopRightUi}, world::{floor::{CurrentFloor, DiscoveredFloors, DungeonFloor, DungeonKind}, map::{grid::grid_to_world_transform, spatial::SpatialMap}}};
+use crate::{app::states::FloorState, input::centralization::GameInput, main_menu::character_select::CharacterConfigs, settings::{game_settings::GameSettings, keybinds::SettingsKeybindRegister}, things_on_grid::components::{PendingAction, PlayerActor, PlayerActorBundle}, turn::{clock::Clock, scheduler::{ActorPriority, ScheduledActor, Scheduler}}, ui::hud::{TopLeftUi, TopRightUi}, world::{floor::{CurrentFloor, DiscoveredFloors, DungeonFloor, DungeonKind}, map::{grid::grid_to_world_transform, spatial::SpatialMap}, systems::DirtyMaprenderMarker}};
 
 #[derive(Resource)]
 pub struct SpriteSheet {
@@ -125,3 +125,16 @@ pub fn setup_game(
 
 
 // floor setup
+
+
+pub fn setup_floor(mut commands: Commands, player_ent: Single<Entity, With<PlayerActor>>) {
+    commands.insert_resource(Scheduler { 
+        queue: BinaryHeap::from([ScheduledActor {
+            entity: player_ent.entity(),
+            next_tick: 0,
+            priority: ActorPriority::Player
+        }]) 
+    });
+
+    commands.insert_resource(DirtyMaprenderMarker(true));
+}

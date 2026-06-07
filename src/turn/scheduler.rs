@@ -1,6 +1,6 @@
 use std::{cmp::Ordering, collections::BinaryHeap};
-use bevy::{ecs::{entity::{ContainsEntity, Entity}, query::With, resource::Resource, system::{Commands, ResMut, Single}}, state::state::NextState};
-use crate::{app::states::TurnState, things_on_grid::components::PlayerActor, turn::clock::Clock};
+use bevy::{ecs::{entity::Entity, resource::Resource, system::ResMut}, state::state::NextState};
+use crate::{app::states::TurnState, turn::clock::Clock};
 
 
 #[derive(Resource)]
@@ -38,15 +38,6 @@ impl PartialOrd for ScheduledActor {
 }
 
 
-pub fn reset_scheduler(mut commands: Commands, player_ent: Single<Entity, With<PlayerActor>>) {
-    commands.insert_resource(Scheduler { 
-        queue: BinaryHeap::from([ScheduledActor {
-            entity: player_ent.entity(),
-            next_tick: 0,
-            priority: ActorPriority::Player
-        }]) 
-    });
-}
 
 pub fn cycle_actions(
     mut scheduler: ResMut<Scheduler>,
