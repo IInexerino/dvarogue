@@ -2,7 +2,7 @@ use std::collections::{BinaryHeap, HashMap};
 
 use bevy::{asset::{AssetServer, Assets, Handle}, camera::{Camera2d, OrthographicProjection, Projection, ScalingMode}, ecs::{entity::{ContainsEntity, Entity}, query::With, resource::Resource, system::{Commands, Res, ResMut, Single}}, image::{Image, TextureAtlas, TextureAtlasLayout}, math::{IVec2, UVec2}, render::view::Msaa, sprite::Sprite, state::state::NextState, transform::components::Transform, ui::{Node, PositionType, px, widget::Text}, utils::default};
 
-use crate::{app::states::FloorState, input::centralization::GameInput, main_menu::character_select::CharacterConfigs, settings::{game_settings::GameSettings, keybinds::SettingsKeybindRegister}, things_on_grid::components::{PendingAction, PlayerActor, PlayerActorBundle}, turn::{clock::Clock, scheduler::{ActorPriority, ScheduledActor, Scheduler}}, ui::hud::{TopLeftUi, TopRightUi}, world::{floor::{CurrentFloor, DiscoveredFloors, DungeonFloor, DungeonKind}, map::{grid::grid_to_world_transform, spatial::SpatialMap}, systems::DirtyMaprenderMarker}};
+use crate::{app::states::{FloorState, MainMenuState}, input::centralization::GameInput, settings::{game_settings::GameSettings, keybinds::SettingsKeybindRegister}, things_on_grid::components::{PendingAction, PlayerActor, PlayerActorBundle}, turn::{clock::Clock, scheduler::{ActorPriority, ScheduledActor, Scheduler}}, ui::{hud::{TopLeftUi, TopRightUi}, mm_character_select::CharacterConfigs}, world::{floor::{CurrentFloor, DiscoveredFloors, DungeonFloor, DungeonKind}, map::{grid::grid_to_world_transform, spatial::SpatialMap}, systems::DirtyMaprenderMarker}};
 
 #[derive(Resource)]
 pub struct SpriteSheet {
@@ -14,6 +14,8 @@ pub fn setup(
     mut commands: Commands,
     mut texture_atlas_layouts: ResMut<Assets<TextureAtlasLayout>>,
     asset_server: Res<AssetServer>,
+    mut mm_state: ResMut<NextState<MainMenuState>>,
+
 ) {
     // - spawning camera -
     commands.spawn((
@@ -41,6 +43,8 @@ pub fn setup(
     commands.insert_resource(game_settings.window);
 
     commands.insert_resource(SettingsKeybindRegister::load_or_default());
+
+    mm_state.set(MainMenuState::InMainMenu);
 }
 
 // game setup
