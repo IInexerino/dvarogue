@@ -18,33 +18,23 @@ impl Plugin for GamePlugin {
 
         // startup systems
         app
-        .add_systems(Startup, (
-            setup,
-        ))
+        .add_systems(Startup, setup)
 
-        .add_systems(OnEnter(MainMenuState::InGame), setup_game,)
+        .add_systems(OnEnter(MainMenuState::InGame), setup_game)
         
-        // new level startup systems
-        .add_systems(OnEnter(FloorState::InFloor), (
-            setup_floor, 
-        ))
+        .add_systems(OnEnter(FloorState::InFloor), setup_floor)
 
-        .add_systems(Update, (
-                (
-                    render_current_map.run_if(resource_exists_and_equals(DirtyMaprenderMarker(true))),
-                ),
-                (
-                    update_game_input,
-                    (
-                        cycle_actions.run_if(in_state(TurnState::CyclingActors)),
-                        execute_actions.run_if(in_state(TurnState::PerformingActions)),
-                        (
-                            register_player_input.run_if(in_state(TurnState::AwaitingPlayerInput)),
-                            toggle_zoom
-                        ).run_if(in_state(IngameMenuState::None))
-                    ),
-                )
-            ).run_if(in_state(FloorState::InFloor))
+        .add_systems(Update, 
+        (
+            render_current_map.run_if(resource_exists_and_equals(DirtyMaprenderMarker(true))),
+            update_game_input,
+            cycle_actions.run_if(in_state(TurnState::CyclingActors)),
+            execute_actions.run_if(in_state(TurnState::PerformingActions)),
+            (
+                register_player_input.run_if(in_state(TurnState::AwaitingPlayerInput)),
+                toggle_zoom
+            ).run_if(in_state(IngameMenuState::None))
+        ).run_if(in_state(FloorState::InFloor))
         );
     }
 }
