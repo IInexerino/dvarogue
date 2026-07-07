@@ -2,7 +2,7 @@ use std::collections::{BinaryHeap, HashMap};
 
 use bevy::{asset::{AssetServer, Assets, Handle}, camera::{Camera2d, OrthographicProjection, Projection, ScalingMode}, ecs::{entity::{ContainsEntity, Entity}, query::With, resource::Resource, system::{Commands, Res, ResMut, Single}}, image::{Image, TextureAtlas, TextureAtlasLayout}, math::{IVec2, UVec2}, render::view::Msaa, sprite::Sprite, state::state::NextState, transform::components::Transform, ui::{Node, PositionType, px, widget::Text}, utils::default};
 
-use crate::{app::states::{FloorState, MainMenuState}, input::centralization::GameInput, settings::{game_settings::GameSettings, keybinds::SettingsKeybindRegister}, things_on_grid::components::{PendingAction, PlayerActor, PlayerActorBundle}, turn::{clock::Clock, scheduler::{ActorPriority, ScheduledActor, Scheduler}}, ui::{hud::{TopLeftUi, TopRightUi}, mm_character_select::CharacterConfigs}, world::{floor::{CurrentFloor, DiscoveredFloors, DungeonFloor, DungeonKind}, map::{grid::grid_to_world_transform, spatial::SpatialMap}, systems::DirtyMaprenderMarker}};
+use crate::{app::states::{FloorState, MainMenuState}, input::centralization::GameInput, settings::{game_settings::GameSettings, keybinds::SettingsKeybindRegister}, things_on_grid::components::{Health, PendingAction, PlayerActor, PlayerActorBundle}, turn::{clock::Clock, scheduler::{ActorPriority, ScheduledActor, Scheduler}}, ui::{hud::{TopLeftUi, TopRightUi}, mm_character_select::CharacterConfigs}, world::{floor::{CurrentFloor, DiscoveredFloors, DungeonFloor, DungeonKind}, map::{grid::grid_to_world_transform, spatial::SpatialMap}, systems::DirtyMaprenderMarker}};
 
 #[derive(Resource)]
 pub struct SpriteSheet {
@@ -68,9 +68,7 @@ pub fn setup_game(
 
     let player_entity = commands.spawn(
         PlayerActorBundle::new(
-            character_configs.starting_delay_mult, 
             pos, 
-            character_configs.health, 
             character_configs.vision_radius,
             character_configs.background,
             Sprite::from_atlas_image(
@@ -102,8 +100,8 @@ pub fn setup_game(
         Text::new(format!(
             "{}\nhealth: {}\ndelay*: {}", 
                 character_configs.background.to_string(),
-                character_configs.health.to_string(), 
-                PendingAction::new(character_configs.starting_delay_mult).to_decimal_string(), 
+                Health::starting().to_string(), 
+                PendingAction::new(100).to_decimal_string(), 
         )),
         TopLeftUi,
     ));

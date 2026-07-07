@@ -1,7 +1,6 @@
 use std::fmt::Display;
 use bevy::{ecs::{bundle::Bundle, component::Component}, math::IVec2, prelude::{Deref, DerefMut}, sprite::Sprite, transform::components::Transform};
-
-use crate::{action::kinds::Action, ui::mm_character_select::CharacterBackground, world::map::grid::grid_to_world_transform};
+use crate::{action::kinds::Action, input::Dir, ui::mm_character_select::CharacterBackground, world::map::grid::grid_to_world_transform};
 
 
 /// Marker [`Component`] for enemy actor entities.
@@ -17,8 +16,9 @@ pub struct EnemyActorBundle {
     actor: Actor,
     pub pending_action: PendingAction,
     pub position: Position,
+    pub rotation: Rotation,
     pub health: Health,
-    pub sprite: Sprite
+    pub sprite: Sprite,
 }
 
 impl EnemyActorBundle {
@@ -26,6 +26,7 @@ impl EnemyActorBundle {
         EnemyActorBundle {
             enemy_actor: EnemyActor,
             actor: Actor,
+            rotation: Rotation::default(),
             pending_action: PendingAction::new(delay_mult),
             position: Position(pos),
             health,
@@ -46,22 +47,24 @@ pub struct PlayerActorBundle {
     actor: Actor,
     pub pending_action: PendingAction,
     pub position: Position,
+    pub rotation: Rotation,
     pub health: Health,
     pub vision: Vision,
     pub background: CharacterBackground,
     pub sprite: Sprite,
-    pub transform: Transform
+    pub transform: Transform,
 
 }
 
 impl PlayerActorBundle {
-    pub fn new(delay_mult: u64, pos: IVec2, health: Health, vision_radius: u8, background: CharacterBackground, sprite: Sprite,) -> Self {
+    pub fn new(pos: IVec2, vision_radius: u8, background: CharacterBackground, sprite: Sprite,) -> Self {
         PlayerActorBundle {
             player_actor: PlayerActor,
             actor: Actor,
-            pending_action: PendingAction::new(delay_mult),
+            pending_action: PendingAction::new(100),
+            rotation: Rotation::default(),
             position: Position(pos),
-            health,
+            health: Health::starting(),
             vision: Vision{ radius: vision_radius},
             background,
             sprite,
@@ -125,6 +128,18 @@ pub struct Vision {
 #[derive(Component, Default, Deref, DerefMut)]
 pub struct Position(pub IVec2);
 
+/// [`Component`] for the game grid position of an Entity.
+#[derive(Component, Deref, DerefMut)]
+pub struct Rotation(pub Dir);
+
+impl Default for Rotation {
+    fn default() -> Self {
+        Rotation(Dir::N)
+    }
+}
+
+
+
 #[derive(Component, Copy, Clone)]
 pub struct Health {
     pub hp: i32,
@@ -134,5 +149,14 @@ pub struct Health {
 impl Display for Health {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}/{}", self.hp, self.max_hp)
+    }
+}
+
+impl Health {
+    pub fn starting() -> Self {
+        Health {
+            max_hp: 100,
+            hp: 100
+        }
     }
 }

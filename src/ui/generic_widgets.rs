@@ -1,4 +1,4 @@
-use bevy::{color::{Srgba, palettes::css::WHITE}, ecs::{bundle::Bundle, children}, text::{TextColor, TextFont}, ui::{AlignItems, BackgroundColor, JustifyContent, Node, UiRect, Val, widget::{Button, Text}}, utils::default};
+use bevy::{color::{Srgba, palettes::css::WHITE}, ecs::{bundle::Bundle, children}, text::{FontSize, TextColor, TextFont}, ui::{AlignItems, BackgroundColor, JustifyContent, Node, UiRect, Val, widget::{Button, Text}}, utils::default};
 
 pub fn generic_button(button_text: &str, text_color: Srgba, save: bool) -> impl Bundle {
     (
@@ -24,7 +24,7 @@ pub fn generic_button(button_text: &str, text_color: Srgba, save: bool) -> impl 
             Text::new(button_text),
             TextColor(text_color.into()),
             TextFont { 
-                font_size: 20.0,
+                font_size: FontSize::Px(20.0),
                 ..default()
             },
         )],

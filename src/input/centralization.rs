@@ -1,13 +1,16 @@
 use bevy::{ecs::{resource::Resource, system::{Res, ResMut}}, input::{ButtonInput, keyboard::KeyCode}, platform::collections::HashSet, reflect::Reflect};
 
-use crate::{input::Dir, settings::keybinds::SettingsKeybindRegister};
+use crate::{action::kinds::RotationalDir, input::Dir, settings::keybinds::SettingsKeybindRegister};
 
 
 #[derive(Clone, Copy, Reflect, Eq, PartialEq, Hash)]
 #[reflect(PartialEq, Hash)]
 pub enum InputKind {
     ToggleZoom,
-    Move(Dir)
+    Move(Dir),
+    Wait,
+    Rotate(RotationalDir),
+    PickupItems,
 }
 
 #[derive(Resource, Default)]
@@ -15,6 +18,7 @@ pub struct GameInput {
     pressed: HashSet<InputKind>,
     just_pressed: HashSet<InputKind>,
     just_released: HashSet<InputKind>,
+
 }
 
 impl GameInput {

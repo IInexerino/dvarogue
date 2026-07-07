@@ -1,24 +1,76 @@
 {
     "dvarogue::settings::keybinds::SettingsKeybindRegister": ([
         (
-            input_kind: Move(E),
-            binding: ArrowRight,
+            input_kind: ToggleZoom,
+            binding: KeyZ,
         ),
         (
             input_kind: Move(W),
             binding: ArrowLeft,
         ),
         (
+            input_kind: Move(E),
+            binding: ArrowRight,
+        ),
+        (
             input_kind: Move(N),
             binding: ArrowUp,
         ),
         (
-            input_kind: ToggleZoom,
-            binding: KeyZ,
+            input_kind: Move(S),
+            binding: ArrowDown,
+        ),
+        (
+            input_kind: Move(W),
+            binding: Numpad4,
+        ),
+        (
+            input_kind: Move(E),
+            binding: Numpad6,
+        ),
+        (
+            input_kind: Move(N),
+            binding: Numpad8,
         ),
         (
             input_kind: Move(S),
-            binding: ArrowDown,
+            binding: Numpad2,
+        ),
+        (
+            input_kind: Move(NW),
+            binding: Numpad7,
+        ),
+        (
+            input_kind: Move(NE),
+            binding: Numpad9,
+        ),
+        (
+            input_kind: Move(SE),
+            binding: Numpad3,
+        ),
+        (
+            input_kind: Move(SW),
+            binding: Numpad1,
+        ),
+        (
+            input_kind: Move(SW),
+            binding: Numpad1,
+        ),
+        (
+            input_kind: Wait,
+            binding: Numpad5,
+        ),
+        (
+            input_kind: Wait,
+            binding: Period,
+        ),
+        (
+            input_kind: Rotate(Clockwise),
+            binding: KeyT,
+        ),
+        (
+            input_kind: Rotate(CounterClockwise),
+            binding: KeyR,
         ),
     ]),
 }

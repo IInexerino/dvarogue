@@ -1,7 +1,6 @@
 use std::fmt::Display;
 use bevy::{color::palettes::css::{BLACK, GRAY, LIGHT_GRAY, ORANGE, RED, WHITE}, ecs::{component::Component, entity::{ContainsEntity, Entity}, observer::On, query::With, resource::Resource, system::{Commands, Query, ResMut, Single}}, picking::events::{Click, Out, Over, Pointer}, state::state::NextState, ui::{AlignItems, BackgroundColor, FlexDirection, JustifyContent, Node, Val}, utils::default};
-use rand::seq::IndexedRandom;
-use crate::{app::states::MainMenuState, things_on_grid::components::Health, ui::generic_widgets::generic_button};
+use crate::{app::states::MainMenuState, ui::generic_widgets::generic_button};
 
 
 
@@ -12,35 +11,17 @@ use crate::{app::states::MainMenuState, things_on_grid::components::Health, ui::
 ///     and the class choice, From will be implemented for that type instead
 #[derive(Component, Clone, Copy)]
 pub enum CharacterBackground {
-    GreyOrb,
-    Mamut,
-    Furio,
+    Deserter,
+    Saboteur,
+    Smuggler,
 }
 
 impl Display for CharacterBackground {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let r = [
-            "the Furious",
-            "the Spiteful",
-            "a Reflection of the Abyss",
-            "a Victim of Brainrot",
-            "the Critic",
-            "the Critical Critic",
-            "the Critic of Critical Criticism",
-            "the Neurotypical",
-            "in Posession of Moulaga",
-            "an American Patriot",
-            "the Lonely Afghani Jew",
-            "an Overly Social American Jew",
-            "a Crazy Bird Lady",
-        ];
-        let mut rng = rand::rng();
-
-        let c = *r.choose(&mut rng).unwrap();
         return match self {
-            CharacterBackground::GreyOrb => write!(f, "A Grey Orb, {}", c),
-            CharacterBackground::Mamut => write!(f, "Mamut, {}", c),
-            CharacterBackground::Furio => write!(f, "Furio the Furious"),
+            CharacterBackground::Deserter => write!(f, "A Deserter"),
+            CharacterBackground::Saboteur => write!(f, "A Saboteur"),
+            CharacterBackground::Smuggler => write!(f, "A Smuggler"),
         };
     }
 }
@@ -53,19 +34,14 @@ impl Display for CharacterBackground {
 /// Only after it has been created will the system that allows one to exit menu into the game be able to run.
 #[derive(Resource)]
 pub struct CharacterConfigs {
-    pub health: Health,
-    /// percentage multiplier (100 = 100%)
-    pub starting_delay_mult: u64,
     pub vision_radius: u8,
     pub background: CharacterBackground,
     pub sprite_idx: usize
 }
 
 impl CharacterConfigs {
-    fn new(max_hp: i32, starting_delay_mult: u64, vision_radius: u8, background: CharacterBackground, sprite_idx: usize) -> Self {
+    fn new(vision_radius: u8, background: CharacterBackground, sprite_idx: usize) -> Self {
         Self {
-            health: Health { hp: max_hp, max_hp },
-            starting_delay_mult,
             vision_radius,
             background,
             sprite_idx,
@@ -77,14 +53,14 @@ impl CharacterConfigs {
 impl From<CharacterBackground> for CharacterConfigs {
     fn from(value: CharacterBackground) -> Self {
         match value {
-            CharacterBackground::GreyOrb => {
-                CharacterConfigs::new(10, 100, 8, value, 3)
+            CharacterBackground::Deserter => {
+                CharacterConfigs::new(8, value, 2)
             },
-            CharacterBackground::Mamut => {
-                CharacterConfigs::new(8, 120, 8, value, 4)
+            CharacterBackground::Saboteur => {
+                CharacterConfigs::new(8, value, 2)
             },
-            CharacterBackground::Furio => {
-                CharacterConfigs::new(12, 75, 8, value, 2)
+            CharacterBackground::Smuggler => {
+                CharacterConfigs::new(8, value, 2)
             },
         }
     }
@@ -143,24 +119,24 @@ pub fn setup_mm_char_selection(mut commands: Commands) {
                     ..default()
                 }
             ).with_children(|parent| {
-                parent.spawn( generic_button("The Gray Orb", GRAY, false))
+                parent.spawn( generic_button("Deserter", GRAY, false))
                 .observe(button_hover_observer).observe(button_out_observer)
                 .observe(|_: On<Pointer<Click>>, mut mm_state: ResMut<NextState<MainMenuState>>, mut commands: Commands | {
-                    commands.insert_resource(CharacterConfigs::from(CharacterBackground::GreyOrb));
+                    commands.insert_resource(CharacterConfigs::from(CharacterBackground::Deserter));
                     mm_state.set(MainMenuState::InMainMenu)
                 });
 
-                parent.spawn( generic_button("Furio the Furious", ORANGE, false))
+                parent.spawn( generic_button("Saboteur", ORANGE, false))
                 .observe(button_hover_observer).observe(button_out_observer)
                 .observe(|_: On<Pointer<Click>>, mut mm_state: ResMut<NextState<MainMenuState>>, mut commands: Commands | {
-                    commands.insert_resource(CharacterConfigs::from(CharacterBackground::Furio));
+                    commands.insert_resource(CharacterConfigs::from(CharacterBackground::Saboteur));
                     mm_state.set(MainMenuState::InMainMenu)
                 });
 
-                parent.spawn( generic_button("Mamut", RED, false))
+                parent.spawn( generic_button("Smuggler", RED, false))
                 .observe(button_hover_observer).observe(button_out_observer)
                 .observe(|_: On<Pointer<Click>>, mut mm_state: ResMut<NextState<MainMenuState>>, mut commands: Commands | {
-                    commands.insert_resource(CharacterConfigs::from(CharacterBackground::Mamut));
+                    commands.insert_resource(CharacterConfigs::from(CharacterBackground::Smuggler));
                     mm_state.set(MainMenuState::InMainMenu)
                 });
             });

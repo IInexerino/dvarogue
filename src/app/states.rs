@@ -28,7 +28,7 @@ pub enum TurnState {
 }
 
 #[derive(SubStates, Clone, PartialEq, Eq, Hash, Debug, Default)]
-#[source(MainMenuState = MainMenuState::InGame)]
+#[source(FloorState = FloorState::InFloor)]
 pub enum IngameMenuState {
     #[default]
     None,

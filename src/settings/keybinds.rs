@@ -1,11 +1,11 @@
 
-use bevy::{ ecs::resource::Resource, input::keyboard::KeyCode::{self, *}, platform::collections::HashSet, reflect::{FromReflect, Reflect, TypeRegistry, serde::{ReflectDeserializer, ReflectSerializer}}};
+use bevy::{ ecs::resource::Resource, input::keyboard::KeyCode::{self, *}, reflect::{FromReflect, Reflect, TypeRegistry, serde::{ReflectDeserializer, ReflectSerializer}}};
 use ron::ser::PrettyConfig;
 use serde_core::de::DeserializeSeed;
-use crate::input::{Dir, centralization::InputKind};
+use crate::{action::kinds::RotationalDir, input::{Dir, centralization::InputKind}};
 
 #[derive(Resource, Reflect, PartialEq)]
-pub struct SettingsKeybindRegister(pub HashSet<InputBinding>);
+pub struct SettingsKeybindRegister(pub Vec<InputBinding>);
 
 impl SettingsKeybindRegister {
     pub fn load_or_default() -> Self {
@@ -55,12 +55,26 @@ impl SettingsKeybindRegister {
 
 impl Default for SettingsKeybindRegister {
     fn default() -> Self {
-        SettingsKeybindRegister(HashSet::from([
+        SettingsKeybindRegister(Vec::from([
             InputBinding::new(InputKind::ToggleZoom, KeyZ),
             InputBinding::new(InputKind::Move(Dir::W), ArrowLeft),
             InputBinding::new(InputKind::Move(Dir::E), ArrowRight),
             InputBinding::new(InputKind::Move(Dir::N), ArrowUp),
             InputBinding::new(InputKind::Move(Dir::S), ArrowDown),
+            InputBinding::new(InputKind::Move(Dir::W), Numpad4),
+            InputBinding::new(InputKind::Move(Dir::E), Numpad6),
+            InputBinding::new(InputKind::Move(Dir::N), Numpad8),
+            InputBinding::new(InputKind::Move(Dir::S), Numpad2),
+            InputBinding::new(InputKind::Move(Dir::NW), Numpad7),
+            InputBinding::new(InputKind::Move(Dir::NE), Numpad9),
+            InputBinding::new(InputKind::Move(Dir::SE), Numpad3),
+            InputBinding::new(InputKind::Move(Dir::SW), Numpad1),
+            InputBinding::new(InputKind::Move(Dir::SW), Numpad1),
+            InputBinding::new(InputKind::Wait, Numpad5),
+            InputBinding::new(InputKind::Wait, Period),
+            InputBinding::new(InputKind::Rotate(RotationalDir::Clockwise), KeyT),
+            InputBinding::new(InputKind::Rotate(RotationalDir::CounterClockwise), KeyR),
+            InputBinding::new(InputKind::PickupItems, KeyE),
         ]))
     }
 }

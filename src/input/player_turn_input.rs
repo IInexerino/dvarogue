@@ -8,26 +8,17 @@ pub fn register_player_input(
     mut player_pending_action: Single<&mut PendingAction, With<PlayerActor>>,
     mut turn_state: ResMut<NextState<TurnState>>
 ) {
-    let inputs = game_inputs.get_just_pressed();
-
-    let mut movement = IVec2::new(0, 0);
-
-    for input_kind in inputs {
-
-        if let InputKind::Move(dir) = input_kind {
-            match dir {
-                Dir::N => movement.y += 1,
-                Dir::S => movement.y -= 1,
-                Dir::E => movement.x += 1,
-                Dir::W => movement.x -= 1,
-            }
+    if let Some(input) = game_inputs.get_just_pressed().next() {
+        let action = match input {
+            InputKind::ToggleZoom => None,
+            InputKind::Move(dir) => Some(Action::Move(dir.into_delta_offset())),
+            InputKind::Wait => Some(Action::Wait),
+            InputKind::Rotate(dir) => Some(Action::Rotate(*dir)),
+            InputKind::PickupItems => Some(Action::PickupItems),
+        };
+        if action.is_some() {
+            turn_state.set(TurnState::PerformingActions);
+            player_pending_action.action = action;
         }
     }
-
-    if movement != IVec2::new(0, 0) {
-        player_pending_action.action = Some(Action::Move(movement));
-        turn_state.set(TurnState::PerformingActions);
-        return 
-    }
-
 }

@@ -1,10 +1,10 @@
-use bevy::{camera::Camera2d, ecs::{entity::Entity, query::{Has, With, Without}, system::{Query, Res, ResMut, Single}}, state::state::NextState, transform::components::Transform};
-use crate::{action::kinds::Action, app::states::TurnState, things_on_grid::components::{PendingAction, PlayerActor, Position}, turn::{clock::Clock, scheduler::{ActorPriority, ScheduledActor, Scheduler}}, world::{floor::{CurrentFloor, DiscoveredFloors}, map::tile::{CollisionKind, TileKind}, systems::DirtyMaprenderMarker}};
+use bevy::{camera::Camera2d, ecs::{entity::Entity, query::{Has, With, Without}, system::{Query, Res, ResMut, Single}}, math::Quat, state::state::NextState, transform::components::Transform};
+use crate::{action::kinds::{Action, RotationalDir}, app::states::TurnState, input::Dir, things_on_grid::components::{PendingAction, PlayerActor, Position, Rotation}, turn::{clock::Clock, scheduler::{ActorPriority, ScheduledActor, Scheduler}}, world::{floor::{CurrentFloor, DiscoveredFloors}, map::tile::{CollisionKind, TileKind}, systems::DirtyMaprenderMarker}};
 
 
 pub fn execute_actions(
     actors_q: Query<(Entity, &PendingAction)>,
-    mut actor_entity_q: Query<(&mut Position, &mut Transform, Has<PlayerActor>), Without<Camera2d>>,
+    mut actor_entity_q: Query<(&mut Position, &mut Transform, &mut Rotation, Has<PlayerActor>), Without<Camera2d>>,
     mut camera_transform_q: Single<&mut Transform, With<Camera2d>>,
     current_floor: Res<CurrentFloor>,
     mut discovered_floors: ResMut<DiscoveredFloors>,
@@ -15,14 +15,15 @@ pub fn execute_actions(
 ) {
     for (entity, pending_action) in actors_q {
         if let Some(action) = &pending_action.action {
-            let (mut pos, mut transform, is_player) = actor_entity_q.get_mut(entity).unwrap();
+            let (mut pos, mut transform, mut rotation, is_player) = actor_entity_q.get_mut(entity).unwrap();
             let priority = if is_player { ActorPriority::Player } else { ActorPriority::Enemy };
 
             
             // getting the current map
             let (map, spatial_map) = discovered_floors.get_mut(&current_floor).expect("Error: CurrentFloor not present in DiscoveredFloors");
 
-            let _ = match action {
+            match action {
+                Action::Wait => {},
                 Action::Move(dir) => {
                     let current_pos = pos.0;
                     let dest_pos = current_pos + dir;
@@ -52,12 +53,30 @@ pub fn execute_actions(
                                 camera_transform_q.translation.x += delta_x;
                                 camera_transform_q.translation.y += delta_y;
                             }
-
-                            true
                         },
-                        CollisionKind::Solid | CollisionKind::DeepWater | CollisionKind::Digable(_) => false,
+                        CollisionKind::Solid | CollisionKind::DeepWater | CollisionKind::Digable(_) => {},
                     }
                 } 
+                Action::Rotate(dir) => {
+                    let current_rotation_num = rotation.0 as usize;
+                    let (new_rotation, angle_in_radians) = match dir {
+                        RotationalDir::Clockwise => {
+                            (
+                                Dir::from_usize(if current_rotation_num < 7 { current_rotation_num + 1 } else { 0 }).unwrap(),
+                                -45.0_f32.to_radians()
+                            )
+                        },
+                        RotationalDir::CounterClockwise => {
+                            (
+                                Dir::from_usize(if current_rotation_num > 0 { current_rotation_num - 1 } else { 7 }).unwrap(),
+                                45.0_f32.to_radians()
+                            )
+                        }
+                    };
+                    rotation.0 = new_rotation;
+                    let rotation_increment = Quat::from_rotation_z(angle_in_radians);
+                    transform.rotation = rotation_increment * transform.rotation;
+                }
                 _ => panic!("Err: Action not registered")
             };
             // push the actor that acted back onto the scheduler with its next schedule
